@@ -22,8 +22,9 @@ public static class AssetUtil
     /// <typeparam name="T">The type of the asset to be loaded.</typeparam>
     /// <param name="bundleName">The name of the .bundle file containing the asset.</param>
     /// <param name="assetName">The name of the asset within the file.</param>
-    /// <param name="onLoaded"></param>
-    /// <param name="extraDependencies"></param>
+    /// <param name="onLoaded">Action to be invoked on the <see cref="LoadedAsset{T}"/> loaded by this operation.
+    /// It is expected that this action will store a reference to the loaded asset.</param>
+    /// <param name="extraDependencies">Extra asset bundles containing dependencies for this asset.</param>
     /// <returns></returns>
     public static IEnumerator LoadAsset<T>(
         string bundleName,
@@ -40,7 +41,6 @@ public static class AssetUtil
         }
 
         extraDependencies ??= [];
-
         List<string> allBundles = [bundleName, .. extraDependencies];
 
         AsyncOperationHandle<IList<IAssetBundleResource>> opHandle =
@@ -48,8 +48,13 @@ public static class AssetUtil
 
         yield return opHandle;
 
-        IAssetBundleResource resource = opHandle.Result[0];
+        if (opHandle.Result.Count == 0)
+        {
+            Log.LogError($"Could not load asset bundle {bundleName}");
+            yield break;
+        }
 
+        IAssetBundleResource resource = opHandle.Result[0];
         AssetBundle bundle = resource.GetAssetBundle();
 
         string objName = bundle.GetAllAssetNames().FirstOrDefault(x => x.Contains(assetName));
@@ -65,7 +70,7 @@ public static class AssetUtil
 
         T loaded = bundle.LoadAsset<T>(objName);
 
-        LoadedAsset<T> wrapped = new(loaded, opHandle);
+        LoadedAsset<T> wrapped = new(loaded, bundle, opHandle);
         onLoaded?.Invoke(wrapped);
 
         yield break;

@@ -7,6 +7,7 @@ using AssetBundleLoadHandle = UnityEngine.ResourceManagement.AsyncOperations
             UnityEngine.ResourceManagement.ResourceProviders.IAssetBundleResource
             >
         >;
+using UnityEngine;
 
 namespace Silksong.AssetHelper;
 
@@ -17,9 +18,10 @@ namespace Silksong.AssetHelper;
 public class LoadedAsset<T> : IDisposable
     where T : UObject
 {
-    internal LoadedAsset(T asset, AssetBundleLoadHandle bundleHandle)
+    internal LoadedAsset(T asset, AssetBundle bundle, AssetBundleLoadHandle bundleHandle)
     {
         _asset = asset;
+        _bundle = bundle;
         _bundleHandle = bundleHandle;
     }
 
@@ -28,7 +30,13 @@ public class LoadedAsset<T> : IDisposable
     /// </summary>
     public T Asset => _asset;
 
+    /// <summary>
+    /// The bundle from which <see cref="Asset"/> was loaded.
+    /// </summary>
+    public AssetBundle Bundle => _bundle;
+
     private readonly T _asset;
+    private readonly AssetBundle _bundle;
     private readonly AssetBundleLoadHandle _bundleHandle;
 
     /// <summary>
