@@ -52,12 +52,30 @@ public static class AssetUtil
         }
 
         extraDependencies ??= [];
-        List<string> allBundles = [bundleName, .. extraDependencies];
+        List<string> allBundleNames = [bundleName, .. extraDependencies];
+
+        List<string> allBundleKeys = [];
+        foreach (string name in allBundleNames)
+        {
+            if (!AssetsData.BundleKeys.TryGetValue(name, out string key))
+            {
+                Log.LogError($"Could not find key {name}");
+                yield break;
+            }
+
+            allBundleKeys.Add(key);
+        }
 
         AsyncOperationHandle<IList<IAssetBundleResource>> opHandle =
-            Addressables.LoadAssetsAsync<IAssetBundleResource>(allBundles, null, Addressables.MergeMode.Union);
+            Addressables.LoadAssetsAsync<IAssetBundleResource>(allBundleKeys, null, Addressables.MergeMode.Union);
 
         yield return opHandle;
+
+        if (opHandle.Result == null)
+        {
+            Log.LogError($"Could not load asset bundles: list null");
+            yield break;
+        }
 
         if (opHandle.Result.Count == 0)
         {
