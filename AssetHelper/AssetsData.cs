@@ -10,9 +10,9 @@ using UnityEngine.AddressableAssets.ResourceLocators;
 
 namespace Silksong.AssetHelper;
 
-public static class Data
+public static class AssetsData
 {
-    private static readonly ManualLogSource Log = Logger.CreateLogSource($"AssetHelper.{nameof(Data)}");
+    private static readonly ManualLogSource Log = Logger.CreateLogSource($"AssetHelper.{nameof(AssetsData)}");
     
     private static Dictionary<string, string>? _bundleKeys { get; set; }
 

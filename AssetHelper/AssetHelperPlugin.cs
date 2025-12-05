@@ -27,7 +27,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         while (true)
         {
             // Check this just in case
-            bool b = Data.TryLoadBundleKeys();
+            bool b = AssetsData.TryLoadBundleKeys();
             if (b)
             {
                 yield break;

@@ -45,7 +45,7 @@ public static class AssetUtil
         )
         where T : UObject
     {
-        if (Data.BundleKeys is null)
+        if (AssetsData.BundleKeys is null)
         {
             Log.LogError($"Cannot load asset {assetName} from {bundleName}: too early.");
             yield break;
