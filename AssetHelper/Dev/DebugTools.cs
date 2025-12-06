@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
@@ -51,7 +52,8 @@ public static class DebugTools
         Stopwatch sw = Stopwatch.StartNew();
         foreach ((string name, string key) in AssetsData.BundleKeys!)
         {
-            IAssetBundleResource rsc = Addressables.LoadAssetAsync<IAssetBundleResource>(key).WaitForCompletion();
+            AsyncOperationHandle<IAssetBundleResource> op = Addressables.LoadAssetAsync<IAssetBundleResource>(key);
+            IAssetBundleResource rsc = op.WaitForCompletion();
             AssetBundle b = rsc.GetAssetBundle();
 
             string[] bundleScenePaths = b.GetAllScenePaths();
@@ -64,6 +66,7 @@ public static class DebugTools
             {
                 assetNames[name] = bundleAssetNames.ToList();
             }
+            Addressables.Release(op);
         }
         sw.Stop();
         Log.LogInfo($"Determined asset names in {sw.ElapsedMilliseconds} ms");
