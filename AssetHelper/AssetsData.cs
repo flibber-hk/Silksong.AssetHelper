@@ -12,6 +12,9 @@ using UnityEngine.AddressableAssets.ResourceLocators;
 
 namespace Silksong.AssetHelper;
 
+/// <summary>
+/// Class managing data about the Addressables database.
+/// </summary>
 public static class AssetsData
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource($"{nameof(AssetsData)}");

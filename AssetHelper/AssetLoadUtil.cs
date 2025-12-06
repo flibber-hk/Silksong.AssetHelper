@@ -11,6 +11,9 @@ using UnityEngine.ResourceManagement.ResourceProviders;
 
 namespace Silksong.AssetHelper;
 
+/// <summary>
+/// Class containing utility methods for loading assets.
+/// </summary>
 public static class AssetLoadUtil
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(AssetLoadUtil));

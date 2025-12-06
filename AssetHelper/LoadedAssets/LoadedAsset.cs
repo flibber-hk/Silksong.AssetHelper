@@ -63,7 +63,7 @@ public class LoadedAsset<T> : IDisposable
     /// Release the Asset Bundles used to load this asset.
     /// 
     /// This method should be called when the underlying asset is no longer needed. 
-    /// Note that this includes clones of the underlying asset via <see cref="UObject.Instantiate"/>;
+    /// Note that this includes clones of the underlying asset via <see cref="UObject.Instantiate{T}(T)"/>;
     /// disposing this instance will cause any clones of the underlying asset to break.
     /// </summary>
     public void Dispose()

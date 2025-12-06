@@ -4,7 +4,7 @@ using Newtonsoft.Json;
 
 namespace Silksong.AssetHelper.Dev;
 
-public static class JsonExtensions
+internal static class JsonExtensions
 {
     public static void SerializeToFile<T>(this T self, string filePath)
     {

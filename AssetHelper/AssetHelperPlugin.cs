@@ -5,11 +5,13 @@ using System.Collections.Generic;
 namespace Silksong.AssetHelper;
 
 [BepInAutoPlugin(id: "io.github.flibber-hk.assethelper")]
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public partial class AssetHelperPlugin : BaseUnityPlugin
 {
+    public static AssetHelperPlugin Instance { get; private set; }
+    #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
     private static readonly Dictionary<string, string> Keys = [];
-    
-    public static AssetHelperPlugin Instance { get;private set; }
 
     private void Awake()
     {

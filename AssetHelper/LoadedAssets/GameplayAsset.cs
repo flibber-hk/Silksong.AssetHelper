@@ -14,13 +14,22 @@ public class GameplayAsset<T> : IDisposable where T : UObject
     private readonly string _assetName;
     private readonly List<string> _dependencies;
 
+    /// <summary>
+    /// Event raised when the asset is loaded, after entering game.
+    /// </summary>
     public event Action<GameplayAsset<T>>? OnAssetLoaded;
 
-    public GameplayAsset(string mainBundleKey, string assetName, List<string> dependencies)
+    /// <summary>
+    /// Create an instance of the GameplayAsset.
+    /// </summary>
+    /// <param name="mainBundleKey">The main bundle key.</param>
+    /// <param name="assetName">The name of the asset.</param>
+    /// <param name="dependencies">Optional list of dependencies.</param>
+    public GameplayAsset(string mainBundleKey, string assetName, List<string>? dependencies = null)
     {
         _mainBundleKey = mainBundleKey;
         _assetName = assetName;
-        _dependencies = dependencies;
+        _dependencies = dependencies ?? [];
 
         GameEvents.OnEnterGame += LoadAsset;
         GameEvents.OnExitGame += UnloadAsset;
