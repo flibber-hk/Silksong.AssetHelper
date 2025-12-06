@@ -40,6 +40,26 @@ public class GameplayAsset<T> : IDisposable where T : UObject
         }
     }
 
+    private List<Action> _queuedActions = new();
+
+    /// <summary>
+    /// Execute the given action immediately, or as soon as the asset is loaded
+    /// if it is currently unloaded.
+    /// 
+    /// Actions supplied to this function will be executed no more than once.
+    /// </summary>
+    public void ExecuteWhenLoaded(Action a)
+    {
+        if (_storedAssetWrapper != null)
+        {
+            Util.ActionUtil.SafeInvoke(a);
+        }
+        else
+        {
+            _queuedActions.Add(a);
+        }
+    }
+
     private void LoadAsset()
     {
         if (_disposed)
@@ -53,6 +73,11 @@ public class GameplayAsset<T> : IDisposable where T : UObject
             {
                 _storedAssetWrapper = asset;
                 OnAssetLoaded?.Invoke(this);
+                foreach (Action a in _queuedActions)
+                {
+                    Util.ActionUtil.SafeInvoke(a);
+                }
+                _queuedActions.Clear();
             },
             _dependencies
             );
