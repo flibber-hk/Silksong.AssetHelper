@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
@@ -81,7 +82,7 @@ public static class AssetsData
 
         foreach (IResourceLocator locator in Addressables.ResourceLocators)
         {
-            foreach (string key in locator.Keys)
+            foreach (string key in locator.Keys.OfType<string>())
             {
                 if (!TryStrip(key, out string? stripped)) continue;
 
