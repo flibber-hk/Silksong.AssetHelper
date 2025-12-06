@@ -1,6 +1,5 @@
 ﻿using System;
 using UnityEngine.AddressableAssets;
-using UObject = UnityEngine.Object;
 using AssetBundleLoadHandle = UnityEngine.ResourceManagement.AsyncOperations
     .AsyncOperationHandle<
         System.Collections.Generic.IList<
@@ -9,7 +8,7 @@ using AssetBundleLoadHandle = UnityEngine.ResourceManagement.AsyncOperations
         >;
 using UnityEngine;
 
-namespace Silksong.AssetHelper;
+namespace Silksong.AssetHelper.LoadedAssets;
 
 /// <summary>
 /// Object representing a Unity object loaded from an asset bundle via <see cref="Addressables"/>.
@@ -52,13 +51,13 @@ public class LoadedAsset<T> : IDisposable
             return;
         }
 
-        Addressables.Release(_bundleHandle);
+        if (disposing)
+        {
+            Addressables.Release(_bundleHandle);
+        }
 
         _disposed = true;
     }
-
-    ~LoadedAsset() => Dispose(false);
-    #endregion
 
     /// <summary>
     /// Release the Asset Bundles used to load this asset.
@@ -72,4 +71,5 @@ public class LoadedAsset<T> : IDisposable
         GC.SuppressFinalize(this);
         Dispose(true);
     }
+    #endregion
 }

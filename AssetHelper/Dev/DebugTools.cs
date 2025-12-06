@@ -20,4 +20,8 @@ public static class DebugTools
 
         AssetsData.InvokeAfterAddressablesLoaded(() => AssetsData.BundleKeys.SerializeToFileInBackground(dumpFile));
     }
+
+    // TODO - dump asset names in bundle
+    // TODO - dump all asset names in all bundles (slow). Also types
+    // TODO - dump asset key -> asset type in Addressables
 }

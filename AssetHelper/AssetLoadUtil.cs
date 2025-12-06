@@ -1,4 +1,5 @@
 ﻿using BepInEx.Logging;
+using Silksong.AssetHelper.LoadedAssets;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,8 +8,6 @@ using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceProviders;
-using Logger = BepInEx.Logging.Logger;
-using UObject = UnityEngine.Object;
 
 namespace Silksong.AssetHelper;
 

@@ -15,6 +15,8 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
     {
         Instance = this;
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
+
+        GameEvents.Hook();
     }
 
     private IEnumerator Start()

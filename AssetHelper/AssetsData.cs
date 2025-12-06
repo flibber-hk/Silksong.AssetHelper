@@ -1,4 +1,5 @@
 ﻿using BepInEx.Logging;
+using Silksong.AssetHelper.Util;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -33,19 +34,6 @@ public static class AssetsData
         }
     }
         
-
-    private static void SafeInvoke(Action a)
-    {
-        try
-        {
-            a?.Invoke();
-        }
-        catch (Exception ex)
-        {
-            Log.LogError($"Error invoking action {a.Method.Name}\n" + ex);
-        }
-    }
-
     private static readonly List<Action> _toInvokeAfterAddressablesLoaded = new();
     
     /// <summary>
@@ -63,7 +51,7 @@ public static class AssetsData
         }
         else
         {
-            SafeInvoke(a);
+            ActionUtil.SafeInvoke(a);
         }
     }
 
@@ -113,7 +101,7 @@ public static class AssetsData
         _bundleKeys = keys;
         foreach (Action a in _toInvokeAfterAddressablesLoaded)
         {
-            SafeInvoke(a);
+            ActionUtil.SafeInvoke(a);
         }
 
         return true;
