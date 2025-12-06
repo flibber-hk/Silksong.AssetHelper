@@ -16,7 +16,7 @@ public class GameplayAsset<T> : IDisposable where T : UObject
 
     public event Action<GameplayAsset<T>>? OnAssetLoaded;
 
-    internal GameplayAsset(string mainBundleKey, string assetName, List<string> dependencies)
+    public GameplayAsset(string mainBundleKey, string assetName, List<string> dependencies)
     {
         _mainBundleKey = mainBundleKey;
         _assetName = assetName;

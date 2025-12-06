@@ -1,5 +1,4 @@
-﻿using BepInEx.Logging;
-using MonoDetour;
+﻿using MonoDetour;
 using MonoDetour.HookGen;
 using Silksong.AssetHelper.Util;
 using System;
