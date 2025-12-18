@@ -18,8 +18,8 @@ namespace Silksong.AssetHelper;
 public static class AssetsData
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource($"{nameof(AssetsData)}");
-    
-    private static Dictionary<string, string>? _bundleKeys { get; set; }
+
+    private static Dictionary<string, string>? _bundleKeys;
 
     /// <summary>
     /// Mapping from bundle file name to the key Addressables uses to load it.
@@ -109,5 +109,28 @@ public static class AssetsData
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Convert a name to an asset bundle key.
+    /// </summary>
+    public static string ToBundleKey(string name)
+    {
+        if (_bundleKeys == null)
+        {
+            Log.LogWarning($"{nameof(ToBundleKey)} called before addressables loaded");
+            return name;
+        }
+
+        if (name.EndsWith(".bundle"))
+        {
+            name = name[..^7];
+        }
+        if (_bundleKeys.TryGetValue(name, out string key))
+        {
+            return key;
+        }
+
+        return name;
     }
 }

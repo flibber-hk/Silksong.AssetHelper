@@ -7,11 +7,13 @@ internal static class ActionUtil
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource($"AssetHelper.{nameof(ActionUtil)}");
 
-    public static void SafeInvoke(Action a)
+    public static void SafeInvoke(Action? a)
     {
+        if (a == null) return;
+
         try
         {
-            a?.Invoke();
+            a.Invoke();
         }
         catch (Exception ex)
         {
@@ -19,11 +21,13 @@ internal static class ActionUtil
         }
     }
 
-    public static void SafeInvoke<T>(Action<T> a, T arg)
+    public static void SafeInvoke<T>(Action<T>? a, T arg)
     {
+        if (a == null) return;
+
         try
         {
-            a?.Invoke(arg);
+            a.Invoke(arg);
         }
         catch (Exception ex)
         {

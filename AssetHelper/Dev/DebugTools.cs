@@ -1,4 +1,5 @@
 ﻿using BepInEx.Logging;
+using Silksong.AssetHelper.LoadedAssets;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +24,7 @@ public static class DebugTools
     /// <summary>
     /// Dump all addressable keys to the bundle_keys.json file next to this assembly.
     /// 
-    /// The keys in this dictionary should be used as the keys in methods on <see cref="AssetLoadUtil"/>.
+    /// The keys in this dictionary should be used to construct a <see cref="AssetBundleGroup"/>.
     /// </summary>
     public static void DumpAddressablesKeys()
     {
