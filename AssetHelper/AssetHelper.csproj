@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <!-- 
   Imports silksong path properties only if present in order to allow CI builds. The file should be gitignored.
   If you are checking out from git and need to create a new one, you can use `dotnet new silksongpath` to generate one.
@@ -13,11 +13,9 @@
     <RootNamespace>Silksong.AssetHelper</RootNamespace>
     <!-- Ignore warning about processor architecture mismatch with PlayMaker ConditionalExpression -->
     <NoWarn>$(NoWarn);MSB3270</NoWarn>
-
     <RestorePackagesWithLockFile>True</RestorePackagesWithLockFile>
     <!-- CI environment variable is automatically set by GitHub actions -->
     <RestoreLockedMode Condition="'$(CI)' == 'true'">True</RestoreLockedMode>
-
     <!-- Allow access of private members at runtime -->
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <!-- Shortens and anonymizes paths in debug symbols relative to the project directory. Breakpoints will not work, however. -->
@@ -28,7 +26,12 @@
     <PackageId>Silksong.AssetHelper</PackageId>
     <RepositoryUrl>https://github.com/flibber-hk/Silksong.AssetHelper</RepositoryUrl>
   </PropertyGroup>
+  
   <ItemGroup>
+    <PackageReference Include="BepInEx.AssemblyPublicizer.MSBuild" Version="0.4.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.8" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
     <PackageReference Include="HarmonyX" Version="2.9.0" />
@@ -39,7 +42,20 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
-    <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Silksong.GameLibs" Version="*-*" PrivateAssets="all" GeneratePathProperty="true"/>
+    <Reference Include="Unity.Addressables" Publicize="true">
+      <HintPath>$(PkgSilksong_GameLibs)/lib/netstandard2.1/Unity.Addressables.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.ResourceManager" Publicize="true">
+      <HintPath>$(PkgSilksong_GameLibs)/lib/netstandard2.1/Unity.ResourceManager.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="AssetsTools.NET" Version="3.0.2" GeneratePathProperty="true" PrivateAssets="all"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -62,6 +78,8 @@
       <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="/" />
       <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="/" />
       <Binaries Include="$(TargetDir)/$(TargetName).xml" LocalDir="/" PackDir="/" />
+      <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.dll" />
+      <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.xml" />
     </ItemGroup>
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/../thunderstore</ThunderstoreDir>
