@@ -22,7 +22,7 @@ internal static class GameEvents
     public static bool IsInGame { get; private set; }
 
     public static event Action? OnEnterGame;
-    public static event Action? OnExitGame;
+    public static event Action? OnQuitToMenu;
     public static event Action? OnQuitApplication;
 
     public static void Hook()
@@ -71,7 +71,7 @@ internal static class GameEvents
     {
         IsInGame = false;
 
-        foreach (Action a in OnExitGame?.GetInvocationList() ?? Array.Empty<Action>())
+        foreach (Action a in OnQuitToMenu?.GetInvocationList() ?? Array.Empty<Action>())
         {
             ActionUtil.SafeInvoke(a);
         }

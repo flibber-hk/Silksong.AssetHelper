@@ -2,7 +2,6 @@
 // the bundle names <-> bundle keys and dependency list.
 
 using BepInEx.Logging;
-using Silksong.AssetHelper.BundleTools;
 using Silksong.AssetHelper.Util;
 using System;
 using System.Collections;
@@ -14,6 +13,8 @@ namespace Silksong.AssetHelper.LoadedAssets;
 
 /// <summary>
 /// Class representing an asset loadable from an asset bundle with Addressables.
+/// 
+/// The asset will be automatically unloaded when quitting to menu.
 /// </summary>
 /// <typeparam name="T">The type of the asset.</typeparam>
 public class LoadableAsset<T> where T : UObject
@@ -67,6 +68,8 @@ public class LoadableAsset<T> where T : UObject
     {
         _assetName = assetName;
         _bundleGroup = bundleGroup;
+
+        GameEvents.OnQuitToMenu += Unload;
     }
 
     /// <summary>
@@ -74,14 +77,7 @@ public class LoadableAsset<T> where T : UObject
     /// </summary>
     /// <param name="assetName">The name of the asset.</param>
     /// <param name="mainBundle">The bundle containing the asset.</param>
-    public LoadableAsset(string assetName, string mainBundle)
-    {
-        _assetName = assetName;
-
-        List<string> deps = Deps.DetermineDirectDeps(mainBundle).Where(x => x != mainBundle).ToList();
-        List<string> bundles = [mainBundle, .. deps];
-        _bundleGroup = new(bundles);
-    }
+    public LoadableAsset(string assetName, string mainBundle) : this(assetName, AssetBundleGroup.CreateWithDependencies(mainBundle)) { }
 
     /// <summary>
     /// Whether the underlying bundles have been loaded.

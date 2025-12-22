@@ -1,4 +1,5 @@
 ﻿using BepInEx.Logging;
+using Silksong.AssetHelper.BundleTools;
 using Silksong.AssetHelper.Util;
 using Steamworks;
 using System;
@@ -21,6 +22,17 @@ namespace Silksong.AssetHelper.LoadedAssets;
 /// and subsequent keys represent dependencies.</param>
 public class AssetBundleGroup(List<string> bundleNames)
 {
+    /// <summary>
+    /// Create an AssetBundleGroup which loads the given bundle as well as its direct dependencies.
+    /// </summary>
+    public static AssetBundleGroup CreateWithDependencies(string mainBundle)
+    {
+        List<string> deps = Deps.DetermineDirectDeps(mainBundle).Where(x => x != mainBundle).ToList();
+        List<string> bundles = [mainBundle, .. deps];
+
+        return new(bundles);
+    }
+
     private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(AssetBundleGroup));
 
     private readonly List<string> _bundleNames = bundleNames;

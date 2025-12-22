@@ -6,26 +6,20 @@
 public static class LoadableAssetExtensions
 {
     /// <summary>
-    /// Set this asset so it is loaded while in game, and unloaded otherwise.
+    /// Ensure that this asset is always loaded while in-game.
+    /// 
     /// If currently in game, will load the asset.
     /// </summary>
     /// <param name="asset">The asset to set.</param>
-    /// <param name="manualLoad">If true, will not automatically load the asset.</param>
     public static LoadableAsset<T> SetGameplayAsset<T>(
-        this LoadableAsset<T> asset,
-        bool manualLoad = false)
+        this LoadableAsset<T> asset)
         where T : UObject
     {
-        GameEvents.OnExitGame += asset.Unload;
+        GameEvents.OnEnterGame += asset.DoLoad;
 
-        if (!manualLoad)
+        if (GameEvents.IsInGame)
         {
-            GameEvents.OnEnterGame += asset.DoLoad;
-
-            if (GameEvents.IsInGame)
-            {
-                asset.Load();
-            }
+            asset.Load();
         }
 
         return asset;
