@@ -1,6 +1,7 @@
 ﻿using BepInEx.Logging;
 using Silksong.AssetHelper.LoadedAssets;
 using Silksong.AssetHelper.Internal;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -8,6 +9,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
+using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
@@ -78,5 +80,48 @@ public static class DebugTools
         };
 
         data.SerializeToFileInBackground(dumpFile);
+    }
+
+    /// <summary>
+    /// Write a list of all Addressable assets loadable using <see cref="Addressables.LoadAssetAsync{TObject}(object)"/> directly.
+    /// 
+    /// The list includes the most important information about each asset.
+    /// </summary>
+    public static void DumpAllAddressableAssets() 
+    {
+        AssetsData.InvokeAfterAddressablesLoaded(DumpAllAddressableAssetsInternal);
+    }
+
+    private static void DumpAllAddressableAssetsInternal()
+    {
+        List<AddressablesAssetInfo> assetInfos = [];
+        
+        foreach (IResourceLocation loc in Addressables.ResourceLocators.SelectMany(loc => loc.AllLocations))
+        {
+            assetInfos.Add(AddressablesAssetInfo.FromLocation(loc));
+        }
+
+        assetInfos.SerializeToFileInBackground(Path.Combine(AssetPaths.AssemblyFolder, "addressable_assets.json"));
+    }
+
+    private class AddressablesAssetInfo
+    {
+        public string? InternalId { get; init; }
+        public string? ProviderId { get; init; }
+        public int DependencyCount { get; init; }
+        public string? PrimaryKey { get; init; }
+        public Type? ResourceType { get; init; }
+
+        public static AddressablesAssetInfo FromLocation(IResourceLocation loc)
+        {
+            return new()
+            {
+                InternalId = loc.InternalId,
+                ProviderId = loc.ProviderId,
+                DependencyCount = loc.Dependencies?.Count ?? 0,
+                PrimaryKey = loc.PrimaryKey,
+                ResourceType = loc.ResourceType,
+            };
+        }
     }
 }
