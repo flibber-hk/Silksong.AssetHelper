@@ -8,24 +8,36 @@ namespace Silksong.AssetHelper;
 
 /// <summary>
 /// Class for events used by AssetHelper.
-/// 
-/// Other mods should probably just hook them themselves...
 /// </summary>
 [MonoDetourTargets(typeof(GameManager))]
 [MonoDetourTargets(typeof(QuitToMenu))]
-internal static class GameEvents
+public static class GameEvents
 {
     private static readonly string Id = $"AssetHelper.{nameof(GameEvents)}";
 
     private static readonly MonoDetourManager mgr = new(Id);
 
+    /// <summary>
+    /// True if the player is in-game; False if the player is in the menu.
+    /// </summary>
     public static bool IsInGame { get; private set; }
 
+    /// <summary>
+    /// Event raised when the player enters game.
+    /// </summary>
     public static event Action? OnEnterGame;
+
+    /// <summary>
+    /// Event raised on return to menu. Addressables assets should be released here, and can be reloaded when the menu has been reached.
+    /// </summary>
     public static event Action? OnQuitToMenu;
+
+    /// <summary>
+    /// Event raised when quitting the application.
+    /// </summary>
     public static event Action? OnQuitApplication;
 
-    public static void Hook()
+    internal static void Hook()
     {
         Md.GameManager.ContinueGame.Postfix(AfterContinueGame, manager: mgr);
         Md.GameManager.StartNewGame.Postfix(AfterStartNewGame, manager: mgr);
