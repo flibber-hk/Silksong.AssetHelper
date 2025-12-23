@@ -19,7 +19,7 @@ namespace Silksong.AssetHelper.LoadedAssets;
 /// <typeparam name="T">The type of the asset.</typeparam>
 public class LoadableAsset<T> where T : UObject
 {
-    private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(LoadableAsset<UObject>));
+    private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(LoadableAsset<>));
 
     private AssetBundleGroup _bundleGroup;
     private string _assetName;
@@ -106,7 +106,7 @@ public class LoadableAsset<T> where T : UObject
         _toInvokeWhenLoaded.Add(toInvoke);
     }
 
-    private void OnLoadedCallback(Action<LoadableAsset<T>>? callback = null)
+    private void OnLoadedCallback()
     {
         if (OnLoaded != null)
         {
@@ -116,8 +116,6 @@ public class LoadableAsset<T> where T : UObject
             }
         }
 
-        ActionUtil.SafeInvoke(callback, this);
-
         foreach (Action<LoadableAsset<T>> toInvoke in _toInvokeWhenLoaded)
         {
             ActionUtil.SafeInvoke(toInvoke, this);
@@ -125,34 +123,30 @@ public class LoadableAsset<T> where T : UObject
         _toInvokeWhenLoaded.Clear();
     }
 
-    internal void DoLoad() => Load();
-
     /// <summary>
     /// Load the underlying bundles.
     /// </summary>
-    public void Load(Action<LoadableAsset<T>>? callback = null)
+    public void Load()
     {
         if (Loaded)
         {
-            ActionUtil.SafeInvoke(callback, this);
             return;
         }
 
-        _bundleGroup.Load(_ => OnLoadedCallback(callback));
+        _bundleGroup.Load(_ => OnLoadedCallback());
     }
 
     /// <summary>
     /// Coroutine to load the underlying bundles.
     /// </summary>
-    public IEnumerator LoadAsync(Action<LoadableAsset<T>>? callback = null)
+    public IEnumerator LoadAsync()
     {
         if (Loaded)
         {
-            ActionUtil.SafeInvoke(callback, this);
             yield break;
         }
 
-        yield return _bundleGroup.LoadAsync(_ => OnLoadedCallback(callback));
+        yield return _bundleGroup.LoadAsync(_ => OnLoadedCallback());
     }
 
     /// <summary>
@@ -161,7 +155,7 @@ public class LoadableAsset<T> where T : UObject
     public void LoadImmediate()
     {
         _bundleGroup.LoadImmediate();
-        OnLoadedCallback(null);
+        OnLoadedCallback();
     }
 
     /// <summary>

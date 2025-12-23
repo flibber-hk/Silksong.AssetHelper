@@ -17,7 +17,7 @@ public static class LoadableAssetExtensions
             {
                 if (disposing)
                 {
-                    GameEvents.OnEnterGame -= asset.DoLoad;
+                    GameEvents.OnEnterGame -= asset.Load;
                 }
                 isDisposed = true;
             }
@@ -42,7 +42,7 @@ public static class LoadableAssetExtensions
         out IDisposable handle)
         where T : UObject
     {
-        GameEvents.OnEnterGame += asset.DoLoad;
+        GameEvents.OnEnterGame += asset.Load;
 
         if (GameEvents.IsInGame)
         {
