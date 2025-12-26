@@ -34,7 +34,7 @@ public class AssetBundleGroup(List<string> bundleNames)
 
     private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(AssetBundleGroup));
 
-    private readonly List<string> _bundleNames = bundleNames;
+    private readonly List<string> _bundleNames = [.. bundleNames];
 
     private List<string>? _bundleKeys;
 
@@ -56,6 +56,10 @@ public class AssetBundleGroup(List<string> bundleNames)
                 {
                     failure = true;
                     Log.LogError($"Could not determine bundle key: {name}");
+                }
+                else
+                {
+                    keys.Add(key);
                 }
             }
 
