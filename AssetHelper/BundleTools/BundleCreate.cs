@@ -2,6 +2,7 @@
 using AssetsTools.NET.Extra;
 using BepInEx.Logging;
 using InControl.UnityDeviceProfiles;
+using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using UnityEngine.UIElements;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -17,11 +19,86 @@ internal static class BundleCreate
 {
     private static readonly ManualLogSource Log = Logger.CreateLogSource($"{nameof(AssetHelper)}.{nameof(BundleCreate)}");
 
+    public class TheData
+    {
+        public List<(int fileId, long pathId, string extCab, string extFileName)> NsbDeps = new();
+        public List<(int fileId, long pathId, string extCab, string extFileName)> DeterminedDeps = new();
+    }
+
     private static void InternalDebug()
     {
-        string bunPath = Path.Combine(AssetPaths.BundleFolder, "scenes_scenes_scenes", "peak_04c.bundle");
-        string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_heart_piece.bundle");
-        CreateShallowSceneBundle(bunPath, ["Heart Piece"], null, outPath);
+
+        {
+            string sceneBunPath = Path.Combine(AssetPaths.BundleFolder, "scenes_scenes_scenes", "peak_04c.bundle");
+            string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_heart_piece.bundle");
+            CreateShallowSceneBundle(sceneBunPath, ["Heart Piece"], null, outPath);
+        }
+
+
+        TheData data = new();
+
+        string bunPath = Path.Combine(AssetPaths.BundleFolder, "localpoolprefabs_assets_areadust.bundle");
+
+        AssetsManager mgr = new();
+
+        BundleFileInstance modBun = mgr.LoadBundleFile(bunPath);
+        AssetBundleFile modBunF = modBun.file;
+        AssetsFileInstance modAfileInst = mgr.LoadAssetsFileFromBundle(modBun, 0, false);
+        AssetsFile modAfile = modAfileInst.file;
+
+        AssetTypeValueField atvf = mgr.GetBaseField(modAfileInst, 1);
+
+        for (int i = 53; i < 53 + 96; i++)
+        {
+            var pair = atvf["m_PreloadTable.Array"][i];
+            int fileId = pair["m_FileID"].AsInt;
+            long pathId = pair["m_PathID"].AsLong;
+            string cab;
+            string fileName;
+
+            if (fileId == 0 || fileId > modAfile.Metadata.Externals.Count)
+            {
+                cab = "";
+                fileName = "";
+            }
+            else
+            {
+                cab = modAfile.Metadata.Externals[fileId - 1].OriginalPathName;
+                string actualCab = cab.Split("/")[^1];
+                if (!Deps.CabLookup.TryGetValue(actualCab.ToLowerInvariant(), out fileName))
+                {
+                    fileName = "???";
+                }
+            }
+
+            data.NsbDeps.Add((fileId, pathId, cab, fileName));
+        }
+
+        Deps.FindDirectDependentObjects(mgr, modAfileInst, -322844142981861729L, out var internalPaths, out var externalPaths);
+
+        foreach (long pathId in internalPaths)
+        {
+            data.DeterminedDeps.Add((0, pathId, "", ""));
+        }
+
+        foreach ((int fileId, long pathId) in externalPaths)
+        {
+            string cab;
+            string fileName;
+
+            cab = modAfile.Metadata.Externals[fileId - 1].OriginalPathName;
+            string actualCab = cab.Split("/")[^1];
+            if (!Deps.CabLookup.TryGetValue(actualCab.ToLowerInvariant(), out fileName))
+            {
+                fileName = "???";
+            }
+
+            data.DeterminedDeps.Add((fileId, pathId, cab, fileName));
+        }
+
+        data.NsbDeps.Sort();
+        data.DeterminedDeps.Sort();
+        data.SerializeToFile(Path.Combine(AssetPaths.AssemblyFolder, "roachfeederDeps.json"));
     }
 
     public static void DoDebug()
@@ -76,7 +153,7 @@ internal static class BundleCreate
     /// <param name="outBundlePath"></param>
     /// <param name="cabName"></param>
     /// <param name="bundleName"></param>
-    public static void GetNames(
+    public static void GetBundleNames(
         string sceneBundlePath,
         List<string> objectNames,
         string outBundlePath,
@@ -129,7 +206,7 @@ internal static class BundleCreate
     {
         AssetsManager mgr = new();
 
-        GetNames(sceneBundlePath, objectNames, outBundlePath, out string newCabName, out string newBundleName);
+        GetBundleNames(sceneBundlePath, objectNames, outBundlePath, out string newCabName, out string newBundleName);
 
         // TODO - avoid hardcoding this. I'd like something with no aux internal files, I think...
         nonSceneBundlePath ??= Path.Combine(AssetPaths.BundleFolder, "toolui_assets_all.bundle");
@@ -190,11 +267,21 @@ internal static class BundleCreate
         bundleData["m_Name"].AsString = newBundleName;
         bundleData["m_AssetBundleName"].AsString = newBundleName;
 
-        // Update the dependencies - TODO actually add all the dependencies? Probably not needed?
+        // Update the dependencies
         AssetTypeValueField childString = bundleData["m_Dependencies.Array"].Children[0];
         childString.AsString = sceneCab.ToLowerInvariant();
         bundleData["m_Dependencies.Array"].Children.Clear();
         bundleData["m_Dependencies.Array"].Children.Add(childString);
+        foreach (AssetsFileExternal extcab in sharedAssetsAfile.Metadata.Externals)
+        {
+            string cab = extcab.OriginalPathName.Split('/')[^1].ToLowerInvariant();
+            if (cab.StartsWith("cab-") && !cab.Contains('.'))
+            {
+                AssetTypeValueField newChildString = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_Dependencies.Array"]);
+                newChildString.AsString = cab;
+                bundleData["m_Dependencies.Array"].Children.Add(newChildString);
+            }
+        }
 
         // Fix up the preload table - TODO only the preloads needed by the game objects? Should nuuvestigate
         List<AssetTypeValueField> preloadPtrs = [];

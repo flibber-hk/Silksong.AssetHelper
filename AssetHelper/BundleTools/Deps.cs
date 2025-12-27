@@ -3,7 +3,6 @@ using AssetsTools.NET.Extra;
 using Silksong.AssetHelper.Internal;
 using System.Collections.Generic;
 using System.IO;
-using UnityEngine;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -86,5 +85,75 @@ public static class Deps
         DirectDependencyLookup.Value[bundleFile] = [.. computedDeps];
 
         return computedDeps;
+    }
+
+    /// <summary>
+    /// Enumerate all pptrs, both within the current bundle and external to the current bundle, that
+    /// are dependencies of this asset.
+    /// </summary>
+    /// <param name="mgr">The AssetsManager in use.</param>
+    /// <param name="afileInst">The Assets file instance.</param>
+    /// <param name="assetPathId">The path ID for the asset to check.</param>
+    /// <param name="internalPaths">A list of path ids to assets within the current file
+    /// that this asset depends on.</param>
+    /// <param name="externalPaths">A list of (file id, path id) pairs to assets external
+    /// to the current file that this asset depends on.</param>
+    public static void FindDirectDependentObjects(
+        AssetsManager mgr,
+        AssetsFileInstance afileInst,
+        long assetPathId,
+        out List<long> internalPaths,
+        out List<(int fileId, long pathId)> externalPaths
+        )
+    {
+        HashSet<long> internalSeen = new([assetPathId]);
+        HashSet<(int fileId, long pathId)> externalSeen = [];
+
+        Queue<long> toProcess = new();
+        toProcess.Enqueue(assetPathId);
+
+        while (toProcess.TryDequeue(out long current))
+        {
+            AssetFileInfo info = afileInst.file.GetAssetInfo(current);
+            AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileInst, info);
+            RefTypeManager refMan = mgr.GetRefTypeManager(afileInst);
+            lock (afileInst.LockReader)
+            {
+                long assetPos = info.GetAbsoluteByteOffset(afileInst.file);
+                AssetTypeValueIterator atvIterator = new(templateField, afileInst.file.Reader, assetPos, refMan);
+
+                while (atvIterator.ReadNext())
+                {
+                    string typeName = atvIterator.TempField.Type;
+
+                    if (!typeName.StartsWith("PPtr<")) continue;
+                    
+                    AssetTypeValueField valueField = atvIterator.ReadValueField();
+                    int fileID = valueField["m_FileID"].AsInt;
+                    long pathID = valueField["m_PathID"].AsLong;
+
+                    if (pathID == 0)
+                    {
+                        // pptr target is null
+                        continue;
+                    }
+
+                    if (fileID != 0)
+                    {
+                        externalSeen.Add((fileID, pathID));
+                        continue;
+                    }
+
+                    if (internalSeen.Add(pathID))
+                    {
+                        toProcess.Enqueue(pathID);
+                    }
+                }
+            }
+        }
+
+        internalPaths = [.. internalSeen];
+        internalPaths.Remove(assetPathId);
+        externalPaths = [.. externalSeen];
     }
 }
