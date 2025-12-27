@@ -86,6 +86,9 @@ public class BundleAsset<T> : ILoadableAsset<T> where T : UObject
 
     /// <summary>
     /// Event invoked when this asset is loaded.
+    /// 
+    /// This event is only invoked if the asset is actually loaded; if the
+    /// asset was already loaded, the event will not be raised.
     /// </summary>
     public event Action<BundleAsset<T>>? OnLoaded;
 
