@@ -1,7 +1,10 @@
 using BepInEx;
 using Silksong.AssetHelper.BundleTools;
+using Silksong.AssetHelper.LoadedAssets;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 
 namespace Silksong.AssetHelper;
 
@@ -22,7 +25,68 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         Deps.Setup();
 
         GameEvents.Hook();
+
+#if DEBUG
+        // TESTING CODE - should delete
+        BundleCreate.DoDebug();
+
+        GameEvents.OnQuitToMenu += () =>
+        {
+            _loadedModBundle?.Unload(true);
+            _loadedModBundle = null;
+        };
+#endif
     }
+
+#if DEBUG
+    private AssetBundle? _loadedModBundle;
+    private AssetBundleGroup? dependencyGrp;
+
+
+    void Update()
+    {
+        if (!Input.GetKeyDown(KeyCode.H)) return;
+
+        StartCoroutine(LoadAndSpawn());
+    }
+
+    IEnumerator LoadAndSpawn()
+    {
+        // Load dependencies
+        if (dependencyGrp is null)
+        {
+            dependencyGrp = AssetBundleGroup.CreateWithDependencies("scenes_scenes_scenes/peak_04c");
+        }
+        yield return dependencyGrp.LoadAsync();
+
+        // Load bundle
+        if (_loadedModBundle == null)
+        {
+            var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "repacked_heart_piece.bundle"));
+            yield return req;
+            _loadedModBundle = req.assetBundle;
+        }
+
+        // Spawn mask shard
+        GameObject go = UObject.Instantiate(_loadedModBundle.LoadAsset<GameObject>("AssetHelper/Heart Piece.prefab"));
+        go.name = $"MaskShard-{GetRandomString()}";
+
+        go.transform.position = HeroController.instance.transform.position + new Vector3(0, 3, 0);
+        go.SetActive(true);
+
+        static string GetRandomString()
+        {
+            string chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+            char[] res = new char[10];
+            System.Random rng = new();
+
+            for (int i = 0; i < 10; i++)
+                res[i] = chars[rng.Next(chars.Length)];
+
+            return new string(res);
+        }
+    }
+#endif
 
     private IEnumerator Start()
     {
