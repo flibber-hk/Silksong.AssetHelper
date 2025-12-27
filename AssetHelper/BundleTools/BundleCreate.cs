@@ -27,8 +27,8 @@ internal static class BundleCreate
     {
         {
             string sceneBunPath = Path.Combine(AssetPaths.BundleFolder, "scenes_scenes_scenes", "peak_04c.bundle");
-            string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_tilemap.bundle");
-            CreateAssetSceneBundle(sceneBunPath, ["TileMap"], null, outPath);
+            string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_owwc.bundle");
+            CreateAssetSceneBundle(sceneBunPath, ["One Way Wall Crystal"], null, outPath);
         }
     }
 
@@ -448,6 +448,40 @@ internal static class BundleCreate
             byte[] data = sceneAfile.Reader.ReadBytes((int)size);
             newInfo.SetNewData(data);
             modAfile.Metadata.AddAssetInfo(newInfo);
+        }
+        // TODO - this block doesn't work
+        if (objsToCopy.Contains(1))
+        {
+            // Copying over PPtr(pathId=1) so we need to update pointers
+            foreach (long p in objsToCopy)
+            {
+                long pathId = p == 1 ? newOne : p;
+
+                AssetFileInfo info = modAfile.GetAssetInfo(pathId);
+                AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(modAfileInst, info);
+                RefTypeManager refMan = mgr.GetRefTypeManager(modAfileInst);
+                lock (modAfileInst.LockReader)
+                {
+                    long assetPos = info.GetAbsoluteByteOffset(modAfile);
+                    AssetTypeValueIterator atvIterator = new(templateField, modAfile.Reader, assetPos, refMan);
+
+                    while (atvIterator.ReadNext())
+                    {
+                        string typeName = atvIterator.TempField.Type;
+
+                        if (!typeName.StartsWith("PPtr<")) continue;
+
+                        AssetTypeValueField valueField = atvIterator.ReadValueField();
+                        int fileID = valueField["m_FileID"].AsInt;
+                        long pathID = valueField["m_PathID"].AsLong;
+
+                        if (pathID == 0 && pathID == 1)
+                        {
+                            valueField["m_PathID"].AsLong = newOne;
+                        }
+                    }
+                }
+            }
         }
 
         // Update the internal bundle

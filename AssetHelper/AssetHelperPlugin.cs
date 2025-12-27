@@ -63,8 +63,8 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         // Load dependencies
         if (dependencyGrp is null)
         {
-            //dependencyGrp = new AssetBundleGroup(Deps.DetermineDirectDeps("scenes_scenes_scenes/peak_04c"));
-            dependencyGrp = AssetBundleGroup.CreateWithDependencies("scenes_scenes_scenes/peak_04c");
+            dependencyGrp = new AssetBundleGroup(Deps.DetermineDirectDeps("scenes_scenes_scenes/peak_04c"));
+            //dependencyGrp = AssetBundleGroup.CreateWithDependencies("scenes_scenes_scenes/peak_04c");
         }
         yield return dependencyGrp.LoadAsync();
 
@@ -73,7 +73,8 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         // Load bundle
         if (_loadedModBundle == null)
         {
-            var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "repacked_heart_piece.bundle"));
+            //var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "repacked_owwc.bundle"));
+            var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "al3ks1s.bundle"));
             yield return req;
             _loadedModBundle = req.assetBundle;
         }
@@ -81,8 +82,11 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         Logger.LogInfo($"MB loaded: {sw.ElapsedMilliseconds} ms");
 
         // Spawn mask shard
-        GameObject go = UObject.Instantiate(_loadedModBundle.LoadAsset<GameObject>("AssetHelper/Heart Piece.prefab"));
-        go.name = $"RFM-{GetRandomString()}";
+        GameObject theAsset = _loadedModBundle.LoadAsset<GameObject>("AssetHelper/Scenes/Peak_04c/One_Way_Wall_Crystal");
+        Logger.LogInfo($"Asset loaded: {sw.ElapsedMilliseconds} ms");
+
+        GameObject go = UObject.Instantiate(theAsset);
+        go.name = $"RFX-{GetRandomString()}";
 
         go.transform.position = HeroController.instance.transform.position + new Vector3(0, 3, 0);
         go.SetActive(true);
@@ -91,7 +95,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
         yield return null;
 
-        go.Dump();
+        //go.Dump();
 
         static string GetRandomString()
         {
