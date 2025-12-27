@@ -1,7 +1,6 @@
 ﻿using AssetsTools.NET;
 using AssetsTools.NET.Extra;
 using BepInEx.Logging;
-using InControl.UnityDeviceProfiles;
 using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections.Generic;
@@ -11,7 +10,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using UnityEngine.UIElements;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -27,19 +25,15 @@ internal static class BundleCreate
 
     private static void InternalDebug()
     {
-
         {
             string sceneBunPath = Path.Combine(AssetPaths.BundleFolder, "scenes_scenes_scenes", "peak_04c.bundle");
-            string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_heart_piece.bundle");
-            CreateShallowSceneBundle(sceneBunPath, ["Heart Piece"], null, outPath);
+            string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_tilemap.bundle");
+            CreateAssetSceneBundle(sceneBunPath, ["TileMap"], null, outPath);
         }
-        {
-            string sceneBunPath = Path.Combine(AssetPaths.BundleFolder, "scenes_scenes_scenes", "dust_02.bundle");
-            string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_rfs.bundle");
-            CreateShallowSceneBundle(sceneBunPath, ["Roachfeeder Short"], null, outPath);
-        }
+    }
 
-
+    private static void TheOtherThing()
+    { 
         TheData data = new();
 
         string bunPath = Path.Combine(AssetPaths.BundleFolder, "localpoolprefabs_assets_areadust.bundle");
@@ -339,6 +333,219 @@ internal static class BundleCreate
         {
             modBunF.Write(writer);
         }
+    }
+
+    // TODO - remove the nonSceneBundlePath requirement
+    /// <summary>
+    /// Create a shallow bundle that can be used to spawn objects from the provided scene bundle.
+    /// No caching is done here.
+    /// </summary>
+    /// <param name="sceneBundlePath">A path to the scene bundle.</param>
+    /// <param name="objectNames">A list of game objects to spawn. Currently only root game objects are supported.</param>
+    /// <param name="nonSceneBundlePath">A path to a non scene bundle to be used as a template.
+    /// The content of this bundle does not matter.
+    /// If null, a sensible default for silksong will be selected.</param>
+    /// <param name="outBundlePath">A path to the created bundle.</param>
+    public static void CreateAssetSceneBundle(
+        string sceneBundlePath,
+        List<string> objectNames,
+        string? nonSceneBundlePath,
+        string outBundlePath
+        )
+    {
+        AssetsManager mgr = new();
+
+        GetBundleNames(sceneBundlePath, objectNames, outBundlePath, out string newCabName, out string newBundleName);
+
+        // TODO - avoid hardcoding this. I'd like something with no aux internal files, I think...
+        nonSceneBundlePath ??= Path.Combine(AssetPaths.BundleFolder, "toolui_assets_all.bundle");
+
+        // Load the scene bundle
+        BundleFileInstance sceneBun = mgr.LoadBundleFile(sceneBundlePath);
+        if (!TryFindAssetsFiles(mgr, sceneBun, out AssetsFileInstance? mainSceneAfileInst, out AssetsFileInstance? sceneSharedAssetsFileInst))
+        {
+            throw new NotSupportedException($"Could not find assets files for {sceneBundlePath}");
+        }
+
+        AssetsFile sceneAfile = mainSceneAfileInst.file;
+        AssetsFile sharedAssetsAfile = sceneSharedAssetsFileInst.file;
+        string sceneCab = mainSceneAfileInst.name;
+
+        List<(AssetFileInfo asset, string name)> gameObjects = GetGameObjects(mgr, mainSceneAfileInst, [.. objectNames]).ToList();
+
+        // Load a non-scene bundle to modify
+        BundleFileInstance modBun = mgr.LoadBundleFile(nonSceneBundlePath);
+        AssetBundleFile modBunF = modBun.file;
+        AssetsFileInstance modAfileInst = mgr.LoadAssetsFileFromBundle(modBun, 0, false);  // TODO - check index
+        AssetsFile modAfile = modAfileInst.file;
+
+        // Update the metadata
+
+        // Update externals on the new bundle
+        modAfile.Metadata.Externals.Clear();
+
+        foreach (AssetsFileExternal extcab in sceneAfile.Metadata.Externals)
+        {
+            modAfile.Metadata.Externals.Add(new()
+            {
+                VirtualAssetPathName = "",
+                Guid = new() { data0 = 0, data1 = 0, data2 = 0, data3 = 0 },
+                Type = AssetsFileExternalType.Normal,
+                PathName = extcab.PathName,
+                OriginalPathName = extcab.OriginalPathName,
+            });
+        }
+
+        // Copy over the type tree from the scene bundle... we need to hang on to the type tree entry for the internal asset bundle though
+        TypeTreeType internalBundleTypeTree = modAfile.Metadata.TypeTreeTypes.First(x => x.TypeId == (int)AssetClassID.AssetBundle);
+        modAfile.Metadata.TypeTreeTypes.Clear();
+        modAfile.Metadata.TypeTreeTypes.AddRange(sceneAfile.Metadata.TypeTreeTypes);
+        modAfile.Metadata.TypeTreeTypes.Add(internalBundleTypeTree);
+        modAfile.Metadata.ScriptTypes.Clear();
+        modAfile.Metadata.ScriptTypes.AddRange(sceneAfile.Metadata.ScriptTypes);
+        modAfile.Metadata.RefTypes.Clear();
+        modAfile.Metadata.RefTypes.AddRange(sceneAfile.Metadata.RefTypes);  // What is this for?
+
+        Log.LogInfo($"Script types count: {modAfile.Metadata.ScriptTypes.Count}");
+        Log.LogInfo($"Type tree count: {modAfile.Metadata.TypeTreeTypes.Count}");
+
+        // Remove asset infos other than the bundle
+        foreach (AssetFileInfo afi in modAfile.AssetInfos.Where(info => info.TypeId != (int)AssetClassID.AssetBundle).ToList())
+        {
+            modAfile.Metadata.RemoveAssetInfo(afi);
+        }
+
+        // Collect pptrs for objects we want to copy
+        HashSet<long> objsToCopy = [];
+        foreach ((AssetFileInfo asset, string name) in gameObjects)
+        {
+            objsToCopy.Add(asset.PathId);
+            Deps.FindDirectDependentObjects(mgr, mainSceneAfileInst, asset.PathId, out List<long> internalPaths, out _);
+            foreach (long ip in internalPaths)
+            {
+                objsToCopy.Add(ip);
+            }
+        }
+        // Copy over objects
+        long newOne = -1;
+        while (objsToCopy.Contains(newOne))
+        {
+            newOne--;
+        }
+
+        // TODO - update any pptrs from 1 to newOne
+        // There are none in the mask shard bundle so I don't have to do it yet :zoteSip:
+        foreach (long p in objsToCopy)
+        {
+            AssetFileInfo oldInfo = sceneAfile.GetAssetInfo(p);
+            long pathId = p == 1 ? newOne : p;
+            AssetFileInfo newInfo = AssetFileInfo.Create(modAfile, pathId, oldInfo.TypeId, oldInfo.GetScriptIndex(modAfile));
+
+            long offset = oldInfo.GetAbsoluteByteOffset(sceneAfile);
+            uint size = oldInfo.ByteSize;
+
+            sceneAfile.Reader.Position = offset;
+            byte[] data = sceneAfile.Reader.ReadBytes((int)size);
+            newInfo.SetNewData(data);
+            modAfile.Metadata.AddAssetInfo(newInfo);
+        }
+
+        // Update the internal bundle
+        // Update the name
+        AssetFileInfo internalBundle = modAfile.AssetInfos.Where(info => info.TypeId == (int)AssetClassID.AssetBundle).First();
+        AssetTypeValueField bundleData = mgr.GetBaseField(modAfileInst, internalBundle);
+        bundleData["m_Name"].AsString = newBundleName;
+        bundleData["m_AssetBundleName"].AsString = newBundleName;
+
+        // Update the type id
+        internalBundle.TypeIdOrIndex = modAfile.Metadata.TypeTreeTypes.Count - 1;
+
+        // Update the dependencies TODO
+        List<AssetTypeValueField> newDeps = [];
+        foreach (AssetsFileExternal extcab in sharedAssetsAfile.Metadata.Externals)
+        {
+            string cab = extcab.OriginalPathName.Split('/')[^1].ToLowerInvariant();
+            if (cab.StartsWith("cab-") && !cab.Contains('.'))
+            {
+                AssetTypeValueField newChildString = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_Dependencies.Array"]);
+                newChildString.AsString = cab;
+                newDeps.Add(newChildString);
+            }
+        }
+        bundleData["m_Dependencies.Array"].Children.Clear();
+        bundleData["m_Dependencies.Array"].Children.AddRange(newDeps);
+
+        // Fix up the preload table - TODO nuuvestigate further
+        List<AssetTypeValueField> preloadPtrs = [];
+
+        AssetFileInfo preloadTable = sceneSharedAssetsFileInst.file.GetAssetsOfType(AssetClassID.PreloadData).First();
+        AssetTypeValueField ptField = mgr.GetBaseField(sceneSharedAssetsFileInst, preloadTable);
+
+        foreach (AssetTypeValueField preloadAsset in ptField["m_Assets.Array"].Children)
+        {
+            AssetTypeValueField newPtr = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_PreloadTable.Array"]);
+            int fileId = preloadAsset["m_FileID"].AsInt;
+            int newfileId;
+            if (fileId == 0)
+            {
+                newfileId = 0;
+            }
+            else
+            {
+                string ext = sceneSharedAssetsFileInst.file.Metadata.Externals[fileId - 1].OriginalPathName;
+                newfileId = 1 + GetExtIndex(modAfile, ext);
+            }
+            
+            newPtr["m_FileID"].AsInt = newfileId;
+            newPtr["m_PathID"].AsLong = preloadAsset["m_PathID"].AsLong;
+            preloadPtrs.Add(newPtr);
+        }
+
+        bundleData["m_PreloadTable.Array"].Children.Clear();
+        bundleData["m_PreloadTable.Array"].Children.AddRange(preloadPtrs);
+
+        // Add new assets to the container
+        AssetTypeValueField assetPtr = bundleData["m_Container.Array"][0];
+
+        List<AssetTypeValueField> newChildren = [];
+
+        foreach ((AssetFileInfo asset, string name) in gameObjects)
+        {
+            AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_Container.Array"]);
+            newChild["first"].AsString = $"{nameof(AssetHelper)}/{name}.prefab";
+            newChild["second.preloadIndex"].AsInt = 0;
+            newChild["second.preloadSize"].AsInt = preloadPtrs.Count;
+            newChild["second.asset.m_FileID"].AsInt = 0;
+            newChild["second.asset.m_PathID"].AsLong = asset.PathId == 1 ? newOne : asset.PathId;
+            newChildren.Add(newChild);
+        }
+
+        bundleData["m_Container.Array"].Children.Clear();
+        bundleData["m_Container.Array"].Children.AddRange(newChildren);
+
+        // Finish up
+        internalBundle.SetNewData(bundleData);
+
+        modBunF.BlockAndDirInfo.DirectoryInfos[0].SetNewData(modAfile);
+        modBunF.BlockAndDirInfo.DirectoryInfos[0].Name = newCabName;
+
+        using (AssetsFileWriter writer = new(outBundlePath))
+        {
+            modBunF.Write(writer);
+        }
+    }
+
+    private static int GetExtIndex(AssetsFile afile, string origPathName)
+    {
+        for (int i = 0; i < afile.Metadata.Externals.Count; i++)
+        {
+            if (afile.Metadata.Externals[i].OriginalPathName == origPathName)
+            {
+                return i;
+            }
+        }
+
+        throw new IndexOutOfRangeException($"Could not find string {origPathName}");
     }
 
     public static IEnumerable<(AssetFileInfo asset, string name)> GetGameObjects(AssetsManager mgr, AssetsFileInstance afileInst, HashSet<string> goNames)

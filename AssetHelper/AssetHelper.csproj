@@ -64,6 +64,12 @@
     <PackageReference Include="MonoDetour" Version="*" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Reference Include="Silksong.GameObjectDump" Condition="'$(Configuration)' != 'Release'">
+      <HintPath>$(SilksongPluginsFolder)/syyePhenomenol-GameObjectDump\Silksong.GameObjectDump.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
   <PropertyGroup Condition="'$(CI)' == 'true'">
     <MonoDetourHookGenStripUnusedHooks>true</MonoDetourHookGenStripUnusedHooks>
   </PropertyGroup>

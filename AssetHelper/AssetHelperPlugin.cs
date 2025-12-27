@@ -1,6 +1,7 @@
 using BepInEx;
 using Silksong.AssetHelper.BundleTools;
 using Silksong.AssetHelper.LoadedAssets;
+using Silksong.GameObjectDump;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -11,6 +12,7 @@ using UnityEngine;
 namespace Silksong.AssetHelper;
 
 [BepInAutoPlugin(id: "io.github.flibber-hk.assethelper")]
+[BepInDependency("io.github.kaycodes13.illine", BepInDependency.DependencyFlags.SoftDependency)]
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 public partial class AssetHelperPlugin : BaseUnityPlugin
 {
@@ -61,7 +63,8 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         // Load dependencies
         if (dependencyGrp is null)
         {
-            dependencyGrp = AssetBundleGroup.CreateWithDependencies("scenes_scenes_scenes/dust_02");
+            //dependencyGrp = new AssetBundleGroup(Deps.DetermineDirectDeps("scenes_scenes_scenes/peak_04c"));
+            dependencyGrp = AssetBundleGroup.CreateWithDependencies("scenes_scenes_scenes/peak_04c");
         }
         yield return dependencyGrp.LoadAsync();
 
@@ -70,7 +73,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         // Load bundle
         if (_loadedModBundle == null)
         {
-            var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "repacked_rfs.bundle"));
+            var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "repacked_heart_piece.bundle"));
             yield return req;
             _loadedModBundle = req.assetBundle;
         }
@@ -78,13 +81,17 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         Logger.LogInfo($"MB loaded: {sw.ElapsedMilliseconds} ms");
 
         // Spawn mask shard
-        GameObject go = UObject.Instantiate(_loadedModBundle.LoadAsset<GameObject>("AssetHelper/Roachfeeder Short.prefab"));
-        go.name = $"RFS-{GetRandomString()}";
+        GameObject go = UObject.Instantiate(_loadedModBundle.LoadAsset<GameObject>("AssetHelper/Heart Piece.prefab"));
+        go.name = $"RFM-{GetRandomString()}";
 
         go.transform.position = HeroController.instance.transform.position + new Vector3(0, 3, 0);
         go.SetActive(true);
 
         Logger.LogInfo($"Spawned: {sw.ElapsedMilliseconds} ms");
+
+        yield return null;
+
+        go.Dump();
 
         static string GetRandomString()
         {
