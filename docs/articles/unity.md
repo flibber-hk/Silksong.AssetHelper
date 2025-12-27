@@ -84,7 +84,7 @@ all have all dependencies (including transitive dependencies) registered.
 
 * [Asset bundle docs](https://docs.unity3d.com/6000.3/Documentation/Manual/AssetBundlesIntro.html)
 * [Addressables docs](https://docs.unity3d.com/Packages/com.unity.addressables@2.7/manual/index.html)
-* [UABEA](https://github.com/nesrak1/UABEANext) - a useful tool/gui for examining asset bundles
+* [UABEA](https://github.com/nesrak1/UABEANext) - a useful tool/gui for examining asset bundles.
 * [AssetsTools.NET](https://github.com/nesrak1/AssetsTools.NET/) - a useful library for examining asset bundles in C#.
-AssetsTools.NET is distributed with AssetHelper, and can be downloaded from [Nuget](https://www.nuget.org/packages/AssetsTools.NET/).
-* [UnityPy](https://github.com/K0lb3/UnityPy) - a useful library for examining asset bundles with Python
+AssetsTools.NET is distributed with AssetHelper, and can be used by referencing the [Nuget](https://www.nuget.org/packages/AssetsTools.NET/) package.
+* [UnityPy](https://github.com/K0lb3/UnityPy) - a useful library for examining asset bundles with Python.
