@@ -7,7 +7,7 @@ namespace Silksong.AssetHelper.LoadedAssets;
 /// </summary>
 public static class LoadableAssetExtensions
 {
-    private class GameplayAssetHandle<T>(LoadableAsset<T> asset) : IDisposable where T : UObject
+    private class GameplayAssetHandle<T>(ILoadableAsset<T> asset) : IDisposable where T : UObject
     {
         private bool isDisposed;
 
@@ -37,8 +37,8 @@ public static class LoadableAssetExtensions
     /// </summary>
     /// <param name="asset">The asset to set.</param>
     /// <param name="handle">Dispose the handle to undo the SetGameplayAsset operation.</param>
-    public static LoadableAsset<T> SetGameplayAsset<T>(
-        this LoadableAsset<T> asset,
+    public static ILoadableAsset<T> SetGameplayAsset<T>(
+        this ILoadableAsset<T> asset,
         out IDisposable handle)
         where T : UObject
     {
