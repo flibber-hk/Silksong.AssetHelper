@@ -73,30 +73,36 @@ public static class BundleCreate
         out string cabName,
         out string bundleName)
     {
-        // Define a unique salt (usually a GUID or a random string) 
-        // to prevent hash collisions with other systems.
-        const string salt = "AssetHelperSalt";
+        const string salt = "AssetHelperSalt\n";
 
-        using (SHA256 sha256 = SHA256.Create())
+        using SHA256 sha256 = SHA256.Create();
+
+        StringBuilder inputSb = new();
+        inputSb.AppendLine(salt);
+        inputSb.AppendLine(sceneBundlePath ?? string.Empty);
+
+        foreach (string name in objectNames)
         {
-            // Combine the salt and the path to create the pre-image
-            string saltedInput = salt + (sceneBundlePath ?? string.Empty);
-            byte[] inputBytes = Encoding.UTF8.GetBytes(saltedInput);
-            byte[] hashBytes = sha256.ComputeHash(inputBytes);
-
-            // Convert the 32-byte hash to a 64-character hex string
-            StringBuilder sb = new(64);
-            foreach (byte b in hashBytes)
-            {
-                sb.Append(b.ToString("x2"));
-            }
-
-            string fullHash = sb.ToString();
-
-            // X = first 32 chars, Y = last 32 chars
-            cabName = $"CAB-{fullHash.Substring(0, 32)}";
-            bundleName = $"{fullHash.Substring(32, 32)}.bundle";
+            inputSb.AppendLine($"\n{name}");
         }
+
+        inputSb.AppendLine(outBundlePath);
+
+        string saltedInput = inputSb.ToString();
+
+        byte[] inputBytes = Encoding.UTF8.GetBytes(saltedInput);
+        byte[] hashBytes = sha256.ComputeHash(inputBytes);
+
+        StringBuilder sb = new(64);
+        foreach (byte b in hashBytes)
+        {
+            sb.Append(b.ToString("x2"));
+        }
+
+        string fullHash = sb.ToString();
+
+        cabName = $"CAB-{fullHash.Substring(0, 32)}";
+        bundleName = $"{fullHash.Substring(32, 32)}.bundle";
     }
 
     /// <summary>
