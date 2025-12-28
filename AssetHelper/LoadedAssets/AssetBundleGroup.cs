@@ -26,6 +26,12 @@ public class AssetBundleGroup(List<string> bundleNames)
     /// </summary>
     public static AssetBundleGroup CreateWithDependencies(string mainBundle)
     {
+        if (AssetsData.IsAddressablesLoaded)
+        {
+            Log.LogWarning(
+                "Checking dependencies may be slow and should be done during your plugin's Awake method."
+                );
+        }
         List<string> deps = Deps.DetermineDirectDeps(mainBundle).Where(x => x != mainBundle).ToList();
         List<string> bundles = [mainBundle, .. deps];
 

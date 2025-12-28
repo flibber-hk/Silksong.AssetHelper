@@ -1,7 +1,4 @@
-﻿// Todo - provide constructors which abstract away the process of getting
-// the bundle names <-> bundle keys and dependency list.
-
-using BepInEx.Logging;
+﻿using BepInEx.Logging;
 using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections;
@@ -12,14 +9,17 @@ using UnityEngine;
 namespace Silksong.AssetHelper.LoadedAssets;
 
 /// <summary>
-/// Class representing an asset loadable from an asset bundle with Addressables.
+/// Class representing an asset loadable from an asset bundle.
+/// 
+/// The asset is loaded by loading the bundles with Addressables, and then
+/// loading the asset from the bundle the normal way.
 /// 
 /// The asset will be automatically unloaded when quitting to menu.
 /// </summary>
 /// <typeparam name="T">The type of the asset.</typeparam>
-public class LoadableAsset<T> where T : UObject
+public class BundleAsset<T> : ILoadableAsset<T> where T : UObject
 {
-    private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(LoadableAsset<>));
+    private static readonly ManualLogSource Log = Logger.CreateLogSource(nameof(BundleAsset<>));
 
     private AssetBundleGroup _bundleGroup;
     private string _assetName;
@@ -64,7 +64,7 @@ public class LoadableAsset<T> where T : UObject
     /// </summary>
     /// <param name="assetName">The name of the asset.</param>
     /// <param name="bundleGroup">The bundles associated with the asset.</param>
-    public LoadableAsset(string assetName, AssetBundleGroup bundleGroup)
+    public BundleAsset(string assetName, AssetBundleGroup bundleGroup)
     {
         _assetName = assetName;
         _bundleGroup = bundleGroup;
@@ -77,7 +77,7 @@ public class LoadableAsset<T> where T : UObject
     /// </summary>
     /// <param name="assetName">The name of the asset.</param>
     /// <param name="mainBundle">The bundle containing the asset.</param>
-    public LoadableAsset(string assetName, string mainBundle) : this(assetName, AssetBundleGroup.CreateWithDependencies(mainBundle)) { }
+    public BundleAsset(string assetName, string mainBundle) : this(assetName, AssetBundleGroup.CreateWithDependencies(mainBundle)) { }
 
     /// <summary>
     /// Whether the underlying bundles have been loaded.
@@ -86,17 +86,20 @@ public class LoadableAsset<T> where T : UObject
 
     /// <summary>
     /// Event invoked when this asset is loaded.
+    /// 
+    /// This event is only invoked if the asset is actually loaded; if the
+    /// asset was already loaded, the event will not be raised.
     /// </summary>
-    public event Action<LoadableAsset<T>>? OnLoaded;
+    public event Action<BundleAsset<T>>? OnLoaded;
 
-    private readonly List<Action<LoadableAsset<T>>> _toInvokeWhenLoaded = [];
+    private readonly List<Action<BundleAsset<T>>> _toInvokeWhenLoaded = [];
     
     /// <summary>
     /// Execute the supplied action when this asset is loaded.
     /// 
     /// If it is already loaded, execute the action immediately.
     /// </summary>
-    public void ExecuteWhenLoaded(Action<LoadableAsset<T>> toInvoke)
+    public void ExecuteWhenLoaded(Action<BundleAsset<T>> toInvoke)
     {
         if (Loaded)
         {
@@ -106,17 +109,19 @@ public class LoadableAsset<T> where T : UObject
         _toInvokeWhenLoaded.Add(toInvoke);
     }
 
+    void ILoadableAsset<T>.ExecuteWhenLoaded(Action<ILoadableAsset<T>> toInvoke) => ExecuteWhenLoaded(toInvoke);
+
     private void OnLoadedCallback()
     {
         if (OnLoaded != null)
         {
-            foreach (Action<LoadableAsset<T>> toInvoke in OnLoaded.GetInvocationList())
+            foreach (Action<BundleAsset<T>> toInvoke in OnLoaded.GetInvocationList())
             {
                 ActionUtil.SafeInvoke(toInvoke, this);
             }
         }
 
-        foreach (Action<LoadableAsset<T>> toInvoke in _toInvokeWhenLoaded)
+        foreach (Action<BundleAsset<T>> toInvoke in _toInvokeWhenLoaded)
         {
             ActionUtil.SafeInvoke(toInvoke, this);
         }

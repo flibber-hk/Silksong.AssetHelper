@@ -38,8 +38,13 @@ public static class AssetsData
         }
     }
         
-    private static readonly List<Action> _toInvokeAfterAddressablesLoaded = new();
+    private static readonly List<Action> _toInvokeAfterAddressablesLoaded = [];
     
+    /// <summary>
+    /// This is <see langword="true"/> if Addressables has loaded the catalog, <see langword="false"/> otherwise.
+    /// </summary>
+    public static bool IsAddressablesLoaded => _bundleKeys != null;
+
     /// <summary>
     /// Invoke this action once Addressables has loaded the catalog.
     /// 
@@ -49,7 +54,7 @@ public static class AssetsData
     /// </summary>
     public static void InvokeAfterAddressablesLoaded(Action a)
     {
-        if (_bundleKeys == null)
+        if (IsAddressablesLoaded)
         {
             _toInvokeAfterAddressablesLoaded.Add(a);
         }
