@@ -74,7 +74,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         if (_loadedModBundle == null)
         {
             //var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "repacked_owwc.bundle"));
-            var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "al3ks1s.bundle"));
+            var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "repacked_hpa.bundle"));
             yield return req;
             _loadedModBundle = req.assetBundle;
         }
@@ -82,13 +82,17 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         Logger.LogInfo($"MB loaded: {sw.ElapsedMilliseconds} ms");
 
         // Spawn mask shard
-        GameObject theAsset = _loadedModBundle.LoadAsset<GameObject>("AssetHelper/Scenes/Peak_04c/One_Way_Wall_Crystal");
+        GameObject theAsset = _loadedModBundle.LoadAsset<GameObject>("AssetHelper/Heart Piece.prefab");
         Logger.LogInfo($"Asset loaded: {sw.ElapsedMilliseconds} ms");
 
         GameObject go = UObject.Instantiate(theAsset);
         go.name = $"RFX-{GetRandomString()}";
 
-        go.transform.position = HeroController.instance.transform.position + new Vector3(0, 3, 0);
+        if (HeroController.instance != null)
+        {
+            go.transform.position = HeroController.instance.transform.position + new Vector3(0, 3, 0);
+        }
+
         go.SetActive(true);
 
         Logger.LogInfo($"Spawned: {sw.ElapsedMilliseconds} ms");

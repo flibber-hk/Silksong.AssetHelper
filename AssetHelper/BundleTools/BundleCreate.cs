@@ -27,8 +27,8 @@ internal static class BundleCreate
     {
         {
             string sceneBunPath = Path.Combine(AssetPaths.BundleFolder, "scenes_scenes_scenes", "peak_04c.bundle");
-            string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_owwc.bundle");
-            CreateAssetSceneBundle(sceneBunPath, ["One Way Wall Crystal"], null, outPath);
+            string outPath = Path.Combine(AssetPaths.AssemblyFolder, "repacked_hpa.bundle");
+            CreateAssetSceneBundle(sceneBunPath, ["Heart Piece"], null, outPath);
         }
     }
 
@@ -511,28 +511,22 @@ internal static class BundleCreate
 
         // Fix up the preload table - TODO nuuvestigate further
         List<AssetTypeValueField> preloadPtrs = [];
+        List<(int start, int count)> depRanges = [];
 
-        AssetFileInfo preloadTable = sceneSharedAssetsFileInst.file.GetAssetsOfType(AssetClassID.PreloadData).First();
-        AssetTypeValueField ptField = mgr.GetBaseField(sceneSharedAssetsFileInst, preloadTable);
-
-        foreach (AssetTypeValueField preloadAsset in ptField["m_Assets.Array"].Children)
+        foreach ((AssetFileInfo asset, string _) in gameObjects)
         {
-            AssetTypeValueField newPtr = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_PreloadTable.Array"]);
-            int fileId = preloadAsset["m_FileID"].AsInt;
-            int newfileId;
-            if (fileId == 0)
+            int start = preloadPtrs.Count;
+            Deps.FindDirectDependentObjects(mgr, mainSceneAfileInst, asset.PathId, out _, out var externalPaths);
+
+            foreach ((int fileId, long pathId) in externalPaths)
             {
-                newfileId = 0;
+                AssetTypeValueField newPtr = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_PreloadTable.Array"]);
+                newPtr["m_FileID"].AsInt = fileId;
+                newPtr["m_PathID"].AsLong = pathId;
+                preloadPtrs.Add(newPtr);
             }
-            else
-            {
-                string ext = sceneSharedAssetsFileInst.file.Metadata.Externals[fileId - 1].OriginalPathName;
-                newfileId = 1 + GetExtIndex(modAfile, ext);
-            }
-            
-            newPtr["m_FileID"].AsInt = newfileId;
-            newPtr["m_PathID"].AsLong = preloadAsset["m_PathID"].AsLong;
-            preloadPtrs.Add(newPtr);
+
+            depRanges.Add((start, preloadPtrs.Count - start));
         }
 
         bundleData["m_PreloadTable.Array"].Children.Clear();
@@ -548,7 +542,7 @@ internal static class BundleCreate
             AssetTypeValueField newChild = ValueBuilder.DefaultValueFieldFromArrayTemplate(bundleData["m_Container.Array"]);
             newChild["first"].AsString = $"{nameof(AssetHelper)}/{name}.prefab";
             newChild["second.preloadIndex"].AsInt = 0;
-            newChild["second.preloadSize"].AsInt = preloadPtrs.Count;
+            newChild["second.preloadSize"].AsInt = preloadPtrs.Count;  // TODO
             newChild["second.asset.m_FileID"].AsInt = 0;
             newChild["second.asset.m_PathID"].AsLong = asset.PathId == 1 ? newOne : asset.PathId;
             newChildren.Add(newChild);
