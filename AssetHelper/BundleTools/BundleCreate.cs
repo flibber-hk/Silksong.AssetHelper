@@ -72,8 +72,7 @@ internal static class BundleCreate
 
             Log.LogInfo($"Starting {goName} at pathId {pathId}");
 
-            BundleUtils.ChildPPtrs kidsFalse = null;
-            List<(int fileId, long PathId)> ep = null;
+            BundleUtils.ChildPPtrs? kidsFalse = null;
 
             if (true)
             {
@@ -83,91 +82,7 @@ internal static class BundleCreate
                 Log.LogInfo($"KidsFalse: {sw.ElapsedMilliseconds} ms; {kidsFalse.InternalPaths.Count} + {kidsFalse.ExternalPaths.Count}");
 
             }
-
-            if (false)
-            {
-                sw = Stopwatch.StartNew();
-                var kidsTrue = mgr.FindBundleDependentObjects(mainSceneAfileInst, pathId, followParent: true);
-                sw.Stop();
-                Log.LogInfo($"KidsTrue: {sw.ElapsedMilliseconds} ms; {kidsTrue.InternalPaths.Count} + {kidsTrue.ExternalPaths.Count}");
-            }
-
-            if (false)
-            {
-                sw = Stopwatch.StartNew();
-                Deps.FindDirectDependentObjects(mgr, mainSceneAfileInst, pathId, out var ip, out ep);
-                sw.Stop();
-                Log.LogInfo($"OG: {sw.ElapsedMilliseconds} ms; {ip.Count} + {ep.Count}");
-            }
         }
-    }
-
-    private static void TheOtherThing()
-    { 
-        TheData data = new();
-
-        string bunPath = Path.Combine(AssetPaths.BundleFolder, "localpoolprefabs_assets_areadust.bundle");
-
-        AssetsManager mgr = new();
-
-        BundleFileInstance modBun = mgr.LoadBundleFile(bunPath);
-        AssetBundleFile modBunF = modBun.file;
-        AssetsFileInstance modAfileInst = mgr.LoadAssetsFileFromBundle(modBun, 0, false);
-        AssetsFile modAfile = modAfileInst.file;
-
-        AssetTypeValueField atvf = mgr.GetBaseField(modAfileInst, 1);
-
-        for (int i = 53; i < 53 + 96; i++)
-        {
-            var pair = atvf["m_PreloadTable.Array"][i];
-            int fileId = pair["m_FileID"].AsInt;
-            long pathId = pair["m_PathID"].AsLong;
-            string cab;
-            string fileName;
-
-            if (fileId == 0 || fileId > modAfile.Metadata.Externals.Count)
-            {
-                cab = "";
-                fileName = "";
-            }
-            else
-            {
-                cab = modAfile.Metadata.Externals[fileId - 1].OriginalPathName;
-                string actualCab = cab.Split("/")[^1];
-                if (!Deps.CabLookup.TryGetValue(actualCab.ToLowerInvariant(), out fileName))
-                {
-                    fileName = "???";
-                }
-            }
-
-            data.NsbDeps.Add((fileId, pathId, cab, fileName));
-        }
-
-        Deps.FindDirectDependentObjects(mgr, modAfileInst, -322844142981861729L, out var internalPaths, out var externalPaths);
-
-        foreach (long pathId in internalPaths)
-        {
-            data.DeterminedDeps.Add((0, pathId, "", ""));
-        }
-
-        foreach ((int fileId, long pathId) in externalPaths)
-        {
-            string cab;
-            string fileName;
-
-            cab = modAfile.Metadata.Externals[fileId - 1].OriginalPathName;
-            string actualCab = cab.Split("/")[^1];
-            if (!Deps.CabLookup.TryGetValue(actualCab.ToLowerInvariant(), out fileName))
-            {
-                fileName = "???";
-            }
-
-            data.DeterminedDeps.Add((fileId, pathId, cab, fileName));
-        }
-
-        data.NsbDeps.Sort();
-        data.DeterminedDeps.Sort();
-        data.SerializeToFile(Path.Combine(AssetPaths.AssemblyFolder, "roachfeederDeps.json"));
     }
 
     public static void DoDebug()
@@ -490,7 +405,8 @@ internal static class BundleCreate
         foreach ((AssetFileInfo asset, string name) in gameObjects)
         {
             objsToCopy.Add(asset.PathId);
-            Deps.FindDirectDependentObjects(mgr, mainSceneAfileInst, asset.PathId, out List<long> internalPaths, out _);
+            BundleUtils.ChildPPtrs childPPtrs = mgr.FindBundleDependentObjects(mainSceneAfileInst, asset.PathId, followParent: true);
+            List<long> internalPaths = childPPtrs.InternalPaths.ToList();
             foreach (long ip in internalPaths)
             {
                 objsToCopy.Add(ip);
@@ -586,7 +502,8 @@ internal static class BundleCreate
         foreach ((AssetFileInfo asset, string _) in gameObjects)
         {
             int start = preloadPtrs.Count;
-            Deps.FindDirectDependentObjects(mgr, mainSceneAfileInst, asset.PathId, out _, out var externalPaths);
+            BundleUtils.ChildPPtrs childPPtrs = mgr.FindBundleDependentObjects(mainSceneAfileInst, asset.PathId, followParent: true);
+            List<(int, long)> externalPaths = childPPtrs.ExternalPaths.ToList();
 
             foreach ((int fileId, long pathId) in externalPaths)
             {
