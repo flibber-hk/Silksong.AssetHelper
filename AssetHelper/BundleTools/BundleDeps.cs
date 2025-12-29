@@ -7,9 +7,9 @@ using System.IO;
 namespace Silksong.AssetHelper.BundleTools;
 
 /// <summary>
-/// Helpers for determining bundle dependencies
+/// Helpers for determining bundle dependencies.
 /// </summary>
-public static class Deps
+public static class BundleDeps
 {
     internal static void Setup()
     {

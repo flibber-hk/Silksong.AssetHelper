@@ -18,7 +18,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
     {
         Instance = this;
         
-        Deps.Setup();
+        BundleDeps.Setup();
 
         GameEvents.Hook();
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");

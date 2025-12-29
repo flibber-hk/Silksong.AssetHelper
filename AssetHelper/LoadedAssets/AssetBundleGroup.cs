@@ -32,7 +32,7 @@ public class AssetBundleGroup(List<string> bundleNames)
                 "Checking dependencies may be slow and should not be done while in game."
                 );
         }
-        List<string> deps = Deps.DetermineDirectDeps(mainBundle).Where(x => x != mainBundle).ToList();
+        List<string> deps = BundleDeps.DetermineDirectDeps(mainBundle).Where(x => x != mainBundle).ToList();
         
         if (includeMainBundle)
         {
