@@ -36,7 +36,7 @@ public class ShallowSceneRepacker : SceneRepacker
     /// <inheritdoc />
     public override RepackedBundleData Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath)
     {
-        // Only support root objects - TODO check if this works with non-root game objects
+        // Only support root objects
         objectNames = objectNames.Select(x => x.Split('/')[0]).Distinct().ToList();
 
         RepackedBundleData outData = new();
