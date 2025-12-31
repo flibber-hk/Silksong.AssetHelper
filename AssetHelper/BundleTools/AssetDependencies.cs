@@ -29,6 +29,12 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
     public record ChildPPtrs(HashSet<long> InternalPaths, HashSet<PPtrData> ExternalPaths)
     {
         /// <summary>
+        /// Create a new empty <see cref="ChildPPtrs"/> instance.
+        /// </summary>
+        /// <returns></returns>
+        public static ChildPPtrs CreateNew() => new([], []);
+        
+        /// <summary>
         /// Add a new PPtr to the collection.
         /// </summary>
         public bool Add(int fileId, long pathId)
@@ -80,9 +86,7 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
 
         AssetFileInfo info = _afileInst.file.GetAssetInfo(assetPathId);
 
-        HashSet<long> internalPPtrs = [];
-        HashSet<PPtrData> externalPPtrs = [];
-        ChildPPtrs childPPtrs = new(internalPPtrs, externalPPtrs);
+        ChildPPtrs childPPtrs = ChildPPtrs.CreateNew();
 
         if (!Settings.FollowTransformParent && (
             info.TypeId == (int)AssetClassID.Transform
@@ -117,7 +121,7 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
             childPPtrs.Add(valueField);
         }
 
-        return _immediateDeps[assetPathId] = new(internalPPtrs, externalPPtrs);
+        return _immediateDeps[assetPathId] = childPPtrs;
     }
 
     /// <summary>
