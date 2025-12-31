@@ -3,7 +3,6 @@ using AssetsTools.NET.Extra;
 using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using GameObjectInfo = Silksong.AssetHelper.BundleTools.GameObjectLookup.GameObjectInfo;
 
@@ -37,7 +36,7 @@ public class StrippedSceneRepacker : SceneRepacker
 
         GameObjectLookup goLookup = GameObjectLookup.CreateFromFile(mgr, mainSceneAfileInst);
 
-        Dictionary<string, BundleUtils.ChildPPtrs> dependencies = [];
+        AssetDependencies dependencies = new(mgr, mainSceneAfileInst);
         HashSet<long> includedPathIds = [];
 
         foreach (string objName in objectNames)
@@ -45,8 +44,7 @@ public class StrippedSceneRepacker : SceneRepacker
             if (goLookup.TryLookupName(objName, out GameObjectInfo? info))
             {
                 includedPathIds.Add(info.GameObjectPathId);
-                dependencies[objName] = mgr.FindBundleDependentObjects(mainSceneAfileInst, info.GameObjectPathId);
-                includedPathIds.UnionWith(dependencies[objName].InternalPaths);
+                includedPathIds.UnionWith(dependencies.FindBundleDeps(info.GameObjectPathId).InternalPaths);
             }
             else
             {
@@ -76,25 +74,6 @@ public class StrippedSceneRepacker : SceneRepacker
             else
             {
                 AssetHelperPlugin.InstanceLogger.LogWarning($"Did not find {objName} in bundle");
-            }
-        }
-
-        // Recalculate dependencies for the roots if needed
-        Dictionary<string, BundleUtils.ChildPPtrs> containerDeps = [];
-        foreach (string name in includedContainerGos)
-        {
-            GameObjectInfo info = goLookup.LookupName(name);
-
-            long gameObjectId = info.GameObjectPathId;
-            long transformId = info.TransformPathId;
-            if (dependencies.TryGetValue(name, out BundleUtils.ChildPPtrs deps))
-            {
-                containerDeps[name] = deps;
-            }
-            else
-            {
-                deps = mgr.FindBundleDependentObjects(mainSceneAfileInst, gameObjectId);
-                containerDeps[name] = deps;
             }
         }
 
@@ -162,7 +141,7 @@ public class StrippedSceneRepacker : SceneRepacker
         foreach (string containerGo in includedContainerGos)
         {
             GameObjectInfo cgInfo = goLookup.LookupName(containerGo);
-            BundleUtils.ChildPPtrs deps = containerDeps[containerGo];
+            AssetDependencies.ChildPPtrs deps = dependencies.FindBundleDeps(cgInfo.GameObjectPathId);
 
             int start = preloadPtrs.Count;
 

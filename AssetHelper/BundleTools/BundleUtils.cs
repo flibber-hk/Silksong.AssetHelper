@@ -3,7 +3,6 @@ using AssetsTools.NET.Extra;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using PPtrData = (int fileId, long pathId);
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -18,27 +17,6 @@ public static class BundleUtils
     /// <param name="Info"></param>
     /// <param name="ValueField"></param>
     public record AssetData(AssetFileInfo Info, AssetTypeValueField ValueField);
-
-    /// <summary>
-    /// Record representing a collection of PPtrs associated with an asset.
-    /// </summary>
-    /// <param name="InternalPaths">Path IDs within the current file.</param>
-    /// <param name="ExternalPaths">Pairs (file ID, path ID) external to the current file.</param>
-    public record ChildPPtrs(HashSet<long> InternalPaths, HashSet<PPtrData> ExternalPaths)
-    {
-        /// <summary>
-        /// Add a new PPtr to the collection.
-        /// </summary>
-        public bool Add(int fileId, long pathId)
-        {
-            if (pathId == 0) return false;
-            if (fileId == 0) return InternalPaths.Add(pathId);
-            return ExternalPaths.Add((fileId, pathId));
-        }
-
-        /// <inheritdoc cref="Add(int, long)" />
-        public bool Add(AssetTypeValueField valueField) => Add(valueField["m_FileID"].AsInt, valueField["m_PathID"].AsLong);
-    }
 
     /// <summary>
     /// Create an <see cref="AssetsManager"/> with the default settings for AssetHelper.
@@ -180,105 +158,5 @@ public static class BundleUtils
         }
 
         return current;
-    }
-
-    /// <summary>
-    /// Find all PPtr nodes pointed to by the given asset.
-    /// </summary>
-    /// <param name="mgr">The AssetsManager in use.</param>
-    /// <param name="afileInst">The Assets file instance.</param>
-    /// <param name="assetPathId">The path ID for the asset to check.</param>
-    /// <param name="followParent">If false (default), will not check the parent for a transform.</param>
-    public static ChildPPtrs FindPPtrNodes(
-        this AssetsManager mgr,
-        AssetsFileInstance afileInst,
-        long assetPathId,
-        bool followParent = false
-        )
-    {
-        AssetFileInfo info = afileInst.file.GetAssetInfo(assetPathId);
-
-        HashSet<long> internalPPtrs = [];
-        HashSet<PPtrData> externalPPtrs = [];
-        ChildPPtrs childPPtrs = new(internalPPtrs, externalPPtrs);
-
-        if (!followParent && (
-            info.TypeId == (int)AssetClassID.Transform
-            || info.TypeId == (int)AssetClassID.RectTransform
-            ))
-        {
-            AssetTypeValueField tfValueField = mgr.GetBaseField(afileInst, info);
-
-            childPPtrs.Add(tfValueField["m_GameObject"]);
-
-            foreach (AssetTypeValueField childVf in tfValueField["m_Children.Array"].Children)
-            {
-                childPPtrs.Add(childVf);
-            }
-            return childPPtrs;
-        }
-
-        AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileInst, info);
-        RefTypeManager refMan = mgr.GetRefTypeManager(afileInst);
-
-        long assetPos = info.GetAbsoluteByteOffset(afileInst.file);
-        AssetTypeValueIterator atvIterator = new(templateField, afileInst.file.Reader, assetPos, refMan);
-
-        while (atvIterator.ReadNext())
-        {
-            string typeName = atvIterator.TempField.Type;
-
-            if (!typeName.StartsWith("PPtr<")) continue;
-
-            AssetTypeValueField valueField = atvIterator.ReadValueField();
-            childPPtrs.Add(valueField);
-        }
-
-        return new(internalPPtrs, externalPPtrs);
-    }
-
-    /// <summary>
-    /// Enumerate all pptrs that are dependencies of this asset. PPtrs within the current bundle will be followed
-    /// but external pptrs will not.
-    /// </summary>
-    /// <param name="mgr">The AssetsManager in use.</param>
-    /// <param name="afileInst">The Assets file instance.</param>
-    /// <param name="assetPathId">The path ID for the asset to check.</param>
-    /// <param name="followParent">If false (default), will not check the parent for a transform.</param>
-    public static ChildPPtrs FindBundleDependentObjects(
-        this AssetsManager mgr,
-        AssetsFileInstance afileInst,
-        long assetPathId,
-        bool followParent = false
-        )
-    {
-        HashSet<long> internalSeen = new([assetPathId]);
-        HashSet<PPtrData> externalSeen = [];
-
-        Queue<long> toProcess = new();
-        toProcess.Enqueue(assetPathId);
-
-        // Aquire the lock for the whole procedure
-        lock (afileInst.LockReader)
-        {
-            while (toProcess.TryDequeue(out long current))
-            {
-                ChildPPtrs childPptrs = mgr.FindPPtrNodes(afileInst, current, followParent);
-
-                externalSeen.UnionWith(childPptrs.ExternalPaths);
-
-                foreach (long pathId in childPptrs.InternalPaths)
-                {
-                    if (internalSeen.Add(pathId))
-                    {
-                        toProcess.Enqueue(pathId);
-                    }
-                }
-            }
-        }
-
-        internalSeen.Remove(assetPathId);
-
-        return new(internalSeen, externalSeen);
     }
 }
