@@ -3,6 +3,7 @@ using AssetsTools.NET.Extra;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Silksong.AssetHelper.BundleTools.AssetDependencies;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -202,5 +203,43 @@ public static class BundleUtils
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Redirect any references from the current assetfileinfo that point to source within the current bundle
+    /// to instead point to target.
+    /// </summary>
+    internal static int Redirect(this AssetsManager mgr, AssetsFileInstance afileinst, AssetFileInfo info, long source, long target)
+    {
+        int counter = 0;
+
+        lock (afileinst.LockReader)
+        {
+            AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileinst, info);
+            RefTypeManager refMan = mgr.GetRefTypeManager(afileinst);
+
+            long assetPos = info.GetAbsoluteByteOffset(afileinst.file);
+            AssetTypeValueIterator atvIterator = new(templateField, afileinst.file.Reader, assetPos, refMan);
+
+            while (atvIterator.ReadNext())
+            {
+                string typeName = atvIterator.TempField.Type;
+
+                if (!typeName.StartsWith("PPtr<")) continue;
+
+                AssetTypeValueField valueField = atvIterator.ReadValueField();
+
+                if (valueField["m_PathID"].AsLong == source)
+                {
+                    valueField["m_PathID"].AsLong = target;
+                    
+                    counter++;
+                }
+            }
+
+            // TODO - set new data, how?
+        }
+
+        return counter;
     }
 }

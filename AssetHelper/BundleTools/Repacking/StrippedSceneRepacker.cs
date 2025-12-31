@@ -90,10 +90,16 @@ public class StrippedSceneRepacker : SceneRepacker
             }
         }
 
-        // Move the asset at path 1 to make way for the internal bundle - TODO
+        // Determine the new path ID for the asset at path=1
+        long newOneAssetPathId = 1;
+
         if (includedPathIds.Contains(1))
         {
-            throw new NotSupportedException("I haven't moved the asset at PathID 1 yet...");
+            newOneAssetPathId = -1;
+            while (includedPathIds.Contains(newOneAssetPathId))
+            {
+                newOneAssetPathId--;
+            }            
         }
 
         // Deparent transforms which are now rooted
@@ -142,6 +148,8 @@ public class StrippedSceneRepacker : SceneRepacker
         List<AssetTypeValueField> preloadPtrs = [];
         List<AssetTypeValueField> newChildren = [];
 
+        long updatedPathId(long orig) => orig == 1 ? newOneAssetPathId : orig;
+
         foreach (string containerGo in includedContainerGos)
         {
             GameObjectInfo cgInfo = goLookup.LookupName(containerGo);
@@ -166,7 +174,7 @@ public class StrippedSceneRepacker : SceneRepacker
             newChild["second.preloadIndex"].AsInt = start;
             newChild["second.preloadSize"].AsInt = count;
             newChild["second.asset.m_FileID"].AsInt = 0;
-            newChild["second.asset.m_PathID"].AsLong = cgInfo.GameObjectPathId;
+            newChild["second.asset.m_PathID"].AsLong = updatedPathId(cgInfo.GameObjectPathId);
             newChildren.Add(newChild);
         }
 
@@ -175,6 +183,32 @@ public class StrippedSceneRepacker : SceneRepacker
         iBundleData["m_Container.Array"].Children.Clear();
         iBundleData["m_Container.Array"].Children.AddRange(newChildren);
         outData.GameObjectAssets = includedContainerGos.ToList();
+
+        // Move the asset at pathId = 1 to newOneAssetPathId
+        if (newOneAssetPathId != 1)
+        {
+            int redirectCount = 0;
+
+            AssetFileInfo toMove = mainSceneAfileInst.file.GetAssetInfo(1);
+            mainSceneAfileInst.file.Metadata.RemoveAssetInfo(toMove);
+            toMove.PathId = newOneAssetPathId;
+            mainSceneAfileInst.file.Metadata.AddAssetInfo(toMove);
+
+            foreach (long pathId in includedPathIds)
+            {
+                if (pathId == 1) continue;
+
+                if (!dependencies.FindImmediateDeps(pathId).InternalPaths.Contains(1))
+                {
+                    continue;
+                }
+
+                redirectCount += mgr.Redirect(mainSceneAfileInst, mainSceneAfileInst.file.GetAssetInfo(pathId), 1, newOneAssetPathId);
+            }
+
+            int locRedirect = mgr.Redirect(mainSceneAfileInst, toMove, 1, newOneAssetPathId);  // Just in case
+            AssetHelperPlugin.InstanceLogger.LogInfo($"Redirected {redirectCount} + {locRedirect} references");
+        }
 
         // Move updated internal bundle into the main assets file
         // Copy the asset bundle type tree from the shared assets to the main bundle

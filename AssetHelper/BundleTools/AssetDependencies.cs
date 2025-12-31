@@ -142,7 +142,7 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
         Queue<long> toProcess = new();
         toProcess.Enqueue(assetPathId);
 
-        // Aquire the lock for the whole procedure
+        // Acquire the lock for the whole procedure
         lock (_afileInst.LockReader)
         {
             while (toProcess.TryDequeue(out long current))
