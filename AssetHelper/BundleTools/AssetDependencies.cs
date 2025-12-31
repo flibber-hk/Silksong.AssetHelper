@@ -55,6 +55,16 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
     private readonly Dictionary<long, ChildPPtrs> _bundleDeps = [];
 
     /// <summary>
+    /// The number of cache hits for the <see cref="FindImmediateDeps(long)"/> function.
+    /// </summary>
+    public int Hits { get; private set; } = 0;
+
+    /// <summary>
+    /// The number of cache misses for the <see cref="FindImmediateDeps(long)"/> function.
+    /// </summary>
+    public int Misses { get; private set; } = 0;
+
+    /// <summary>
     /// Find all PPtr nodes pointed to by the given asset.
     /// </summary>
     /// <param name="assetPathId">The path ID for the asset to check.</param>
@@ -62,8 +72,11 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
     {
         if (_immediateDeps.TryGetValue(assetPathId, out ChildPPtrs cached))
         {
+            Hits++;
             return cached;
         }
+
+        Misses++;
 
         AssetFileInfo info = _afileInst.file.GetAssetInfo(assetPathId);
 
