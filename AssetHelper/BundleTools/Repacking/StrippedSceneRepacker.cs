@@ -242,6 +242,8 @@ public class StrippedSceneRepacker : SceneRepacker
             sceneBun.file.Write(writer);
         }
 
+        mgr.UnloadAll();
+
         return outData;
     }
 }

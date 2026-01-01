@@ -198,6 +198,8 @@ public class ShallowSceneRepacker : SceneRepacker
             modBunF.Write(writer);
         }
 
+        mgr.UnloadAll();
+
         return outData;
     }
 }

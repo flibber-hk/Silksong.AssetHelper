@@ -209,5 +209,7 @@ public static class DebugTools
 
         List<string> cInfos = infos.Select(x => $"{x.GameObjectName} [{x.GameObjectPathId}, {x.TransformPathId}]").ToList();
         cInfos.SerializeToFile(outPath);
+
+        mgr.UnloadAll();
     }
 }
