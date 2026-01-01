@@ -2,7 +2,9 @@
 using AssetsTools.NET.Extra;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using UnityEngine.TextCore.Text;
 using static Silksong.AssetHelper.BundleTools.AssetDependencies;
 
 namespace Silksong.AssetHelper.BundleTools;
@@ -211,11 +213,14 @@ public static class BundleUtils
     /// </summary>
     internal static int Redirect(this AssetsManager mgr, AssetsFileInstance afileinst, AssetFileInfo info, long source, long target)
     {
-        int counter = 0;
+        int replaceCount = 0;
 
         lock (afileinst.LockReader)
         {
             AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileinst, info);
+
+            byte[] globalAssetData = mgr.GetBaseField(afileinst, info).WriteToByteArray();
+
             RefTypeManager refMan = mgr.GetRefTypeManager(afileinst);
 
             long assetPos = info.GetAbsoluteByteOffset(afileinst.file);
@@ -229,17 +234,23 @@ public static class BundleUtils
 
                 AssetTypeValueField valueField = atvIterator.ReadValueField();
 
-                if (valueField["m_PathID"].AsLong == source)
+                if (valueField["m_PathID"].AsLong != source)
                 {
-                    valueField["m_PathID"].AsLong = target;
-                    
-                    counter++;
+                    continue;                    
                 }
+
+                valueField["m_PathID"].AsLong = target;
+                byte[] newData = valueField.WriteToByteArray();
+
+                int assetStart = atvIterator.ReadPosition - newData.Length;
+                Array.Copy(newData, 0, globalAssetData, assetStart, newData.Length);
+
+                replaceCount++;
             }
 
-            // TODO - set new data, how?
+            info.SetNewData(globalAssetData);
         }
 
-        return counter;
+        return replaceCount;
     }
 }
