@@ -208,23 +208,36 @@ public static class BundleUtils
     }
 
     /// <summary>
+    /// Create an <see cref="AssetTypeValueIterator"></see> for the current asset file info.
+    /// 
+    /// This should only be done while the <see cref="AssetsFileInstance.LockReader"/> of the afileinst is held.
+    /// </summary>
+    public static AssetTypeValueIterator CreateIterator(this AssetsManager mgr, AssetsFileInstance afileinst, AssetFileInfo info)
+    {
+        AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileinst, info);
+
+        RefTypeManager refMan = mgr.GetRefTypeManager(afileinst);
+
+        long assetPos = info.GetAbsoluteByteOffset(afileinst.file);
+        AssetTypeValueIterator atvIterator = new(templateField, afileinst.file.Reader, assetPos, refMan);
+
+        return atvIterator;
+    }
+
+    /// <summary>
     /// Redirect any references from the current assetfileinfo that point to source within the current bundle
     /// to instead point to target.
+    /// 
+    /// This should be run for each asset that referenced the asset at pathID = source if it is being moved to pathID = target.
     /// </summary>
-    internal static int Redirect(this AssetsManager mgr, AssetsFileInstance afileinst, AssetFileInfo info, long source, long target)
+    public static int Redirect(this AssetsManager mgr, AssetsFileInstance afileinst, AssetFileInfo info, long source, long target)
     {
         int replaceCount = 0;
 
         lock (afileinst.LockReader)
         {
-            AssetTypeTemplateField templateField = mgr.GetTemplateBaseField(afileinst, info);
-
             byte[] globalAssetData = mgr.GetBaseField(afileinst, info).WriteToByteArray();
-
-            RefTypeManager refMan = mgr.GetRefTypeManager(afileinst);
-
-            long assetPos = info.GetAbsoluteByteOffset(afileinst.file);
-            AssetTypeValueIterator atvIterator = new(templateField, afileinst.file.Reader, assetPos, refMan);
+            AssetTypeValueIterator atvIterator = mgr.CreateIterator(afileinst, info);
 
             while (atvIterator.ReadNext())
             {
@@ -234,7 +247,7 @@ public static class BundleUtils
 
                 AssetTypeValueField valueField = atvIterator.ReadValueField();
 
-                if (valueField["m_PathID"].AsLong != source)
+                if (valueField["m_PathID"].AsLong != source || valueField["m_FileID"].AsInt != 0)
                 {
                     continue;                    
                 }

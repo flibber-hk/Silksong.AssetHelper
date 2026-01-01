@@ -105,11 +105,7 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
             return _immediateDeps[assetPathId] = childPPtrs;
         }
 
-        AssetTypeTemplateField templateField = _mgr.GetTemplateBaseField(_afileInst, info);
-        RefTypeManager refMan = _mgr.GetRefTypeManager(_afileInst);
-
-        long assetPos = info.GetAbsoluteByteOffset(_afileInst.file);
-        AssetTypeValueIterator atvIterator = new(templateField, _afileInst.file.Reader, assetPos, refMan);
+        AssetTypeValueIterator atvIterator = _mgr.CreateIterator(_afileInst, info);
 
         while (atvIterator.ReadNext())
         {
