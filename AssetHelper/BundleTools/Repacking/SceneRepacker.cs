@@ -22,8 +22,8 @@ public abstract class SceneRepacker
     /// <param name="cabName"></param>
     /// <param name="bundleName"></param>
     protected static void GetDefaultBundleNames(
-        string sceneBundlePath,
-        List<string> objectNames,
+        string? sceneBundlePath,
+        List<string>? objectNames,
         string outBundlePath,
         out string cabName,
         out string bundleName)
@@ -34,9 +34,9 @@ public abstract class SceneRepacker
 
         StringBuilder inputSb = new();
         inputSb.AppendLine(salt);
-        inputSb.AppendLine(sceneBundlePath ?? string.Empty);
+        inputSb.AppendLine(sceneBundlePath ?? "NULL SCENE BUNDLE PATH");
 
-        foreach (string name in objectNames)
+        foreach (string name in objectNames ?? ["NULL OBJECT NAMES"])
         {
             inputSb.AppendLine($"\n{name}");
         }
