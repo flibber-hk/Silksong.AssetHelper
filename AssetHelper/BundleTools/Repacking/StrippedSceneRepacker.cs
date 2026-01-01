@@ -102,6 +102,8 @@ public class StrippedSceneRepacker : SceneRepacker
             }            
         }
 
+        long updatedPathId(long orig) => orig == 1 ? newOneAssetPathId : orig;
+
         // Deparent transforms which are now rooted
         foreach (GameObjectInfo current in goLookup)
         {
@@ -147,8 +149,6 @@ public class StrippedSceneRepacker : SceneRepacker
         // Add objects to the container
         List<AssetTypeValueField> preloadPtrs = [];
         List<AssetTypeValueField> newChildren = [];
-
-        long updatedPathId(long orig) => orig == 1 ? newOneAssetPathId : orig;
 
         foreach (string containerGo in includedContainerGos)
         {
