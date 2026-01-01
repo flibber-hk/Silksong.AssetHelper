@@ -237,11 +237,7 @@ public class StrippedSceneRepacker : SceneRepacker
             sceneBun.file.BlockAndDirInfo.DirectoryInfos[i].SetRemoved();
         }
 
-        using (AssetsFileWriter writer = new(outBundlePath))
-        {
-            sceneBun.file.Write(writer);
-        }
-
+        sceneBun.file.WriteBundleToFile(outBundlePath);
         mgr.UnloadAll();
 
         return outData;

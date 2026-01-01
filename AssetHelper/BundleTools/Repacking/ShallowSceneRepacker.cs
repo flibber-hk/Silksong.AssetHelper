@@ -193,11 +193,7 @@ public class ShallowSceneRepacker : SceneRepacker
         modBunF.BlockAndDirInfo.DirectoryInfos[0].SetNewData(modAfile);
         modBunF.BlockAndDirInfo.DirectoryInfos[0].Name = newCabName;
 
-        using (AssetsFileWriter writer = new(outBundlePath))
-        {
-            modBunF.Write(writer);
-        }
-
+        modBunF.WriteBundleToFile(outBundlePath);
         mgr.UnloadAll();
 
         return outData;

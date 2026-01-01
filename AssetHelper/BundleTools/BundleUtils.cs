@@ -2,6 +2,7 @@
 using AssetsTools.NET.Extra;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace Silksong.AssetHelper.BundleTools;
@@ -262,5 +263,22 @@ public static class BundleUtils
         }
 
         return replaceCount;
+    }
+
+    /// <summary>
+    /// Write the given asset bundle to the given file.
+    /// </summary>
+    public static void WriteBundleToFile(this AssetBundleFile bunFile, string outBundlePath)
+    {
+        // Going via memory stream and performing a single large write is a lot more
+        // efficient for certain systems than writing directly.
+
+        using MemoryStream ms = new();
+        using AssetsFileWriter writer = new(ms);
+        bunFile.Write(writer);
+
+        using FileStream fileStream = new(outBundlePath, FileMode.Create, FileAccess.Write);
+        byte[] internalBuffer = ms.GetBuffer();
+        fileStream.Write(internalBuffer, 0, (int)ms.Length);
     }
 }
