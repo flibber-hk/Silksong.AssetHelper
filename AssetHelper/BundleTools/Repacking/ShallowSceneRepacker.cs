@@ -1,5 +1,6 @@
 ﻿using AssetsTools.NET;
 using AssetsTools.NET.Extra;
+using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,12 +38,12 @@ public class ShallowSceneRepacker : SceneRepacker
     public override RepackedBundleData Repack(string sceneBundlePath, List<string> objectNames, string outBundlePath)
     {
         // Only support root objects
-        objectNames = objectNames.Select(x => x.Split('/')[0]).Distinct().ToList();
+        List<string> rootObjects = objectNames.Select(x => x.Split('/')[0]).Distinct().ToList();
 
         RepackedBundleData outData = new();
         AssetsManager mgr = BundleUtils.CreateDefaultManager();
 
-        GetDefaultBundleNames(sceneBundlePath, objectNames, outBundlePath, out string newCabName, out string newBundleName);
+        GetDefaultBundleNames(sceneBundlePath, rootObjects, outBundlePath, out string newCabName, out string newBundleName);
         outData.BundleName = newBundleName;
         outData.CabName = newCabName;
 
@@ -61,13 +62,23 @@ public class ShallowSceneRepacker : SceneRepacker
         string sceneCab = mainSceneAfileInst.name;
 
         Dictionary<string, BundleUtils.AssetData> gameObjects = mgr.FindRootGameObjects(
-            mainSceneAfileInst, objectNames, out List<string> missingObjects);
+            mainSceneAfileInst, rootObjects, out List<string> missingObjects);
 
         if (missingObjects.Count > 0)
         {
             AssetHelperPlugin.InstanceLogger.LogWarning($"Missing objects for bundle {sceneBundlePath}");
             AssetHelperPlugin.InstanceLogger.LogWarning(string.Join(", ", missingObjects));
         }
+
+        List<string> nonRepackedAssets = [];
+        foreach (string objName in objectNames)
+        {
+            if (missingObjects.Any(x => objName.HasPrefix(x)))
+            {
+                nonRepackedAssets.Add(objName);
+            }
+        }
+        outData.NonRepackedAssets = nonRepackedAssets;
 
         // Load a non-scene bundle to modify
         BundleFileInstance modBun = mgr.LoadBundleFile(_nonSceneBundlePath);

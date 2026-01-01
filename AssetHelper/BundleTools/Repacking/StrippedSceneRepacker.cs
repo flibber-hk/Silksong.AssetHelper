@@ -69,6 +69,7 @@ public class StrippedSceneRepacker : SceneRepacker
 
         // Generate a path for each rootmost go which has a child in the request
         HashSet<string> includedContainerGos = [];
+        List<string> missingObjects = [];
         foreach (string objName in objectNames)
         {
             if (ObjPathUtil.TryFindAncestor(rootmostGos, objName, out string? ancestor, out _))
@@ -78,8 +79,10 @@ public class StrippedSceneRepacker : SceneRepacker
             else
             {
                 AssetHelperPlugin.InstanceLogger.LogWarning($"Did not find {objName} in bundle");
+                missingObjects.Add(objName);
             }
         }
+        outData.NonRepackedAssets = missingObjects;
 
         // Strip all assets that are not needed
         foreach (AssetFileInfo afileInfo in mainSceneAfileInst.file.AssetInfos.ToList())
