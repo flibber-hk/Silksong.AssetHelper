@@ -105,11 +105,7 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
             return _immediateDeps[assetPathId] = childPPtrs;
         }
 
-        AssetTypeTemplateField templateField = _mgr.GetTemplateBaseField(_afileInst, info);
-        RefTypeManager refMan = _mgr.GetRefTypeManager(_afileInst);
-
-        long assetPos = info.GetAbsoluteByteOffset(_afileInst.file);
-        AssetTypeValueIterator atvIterator = new(templateField, _afileInst.file.Reader, assetPos, refMan);
+        AssetTypeValueIterator atvIterator = _mgr.CreateIterator(_afileInst, info);
 
         while (atvIterator.ReadNext())
         {
@@ -142,7 +138,7 @@ public class AssetDependencies(AssetsManager mgr, AssetsFileInstance afileInst, 
         Queue<long> toProcess = new();
         toProcess.Enqueue(assetPathId);
 
-        // Aquire the lock for the whole procedure
+        // Acquire the lock for the whole procedure
         lock (_afileInst.LockReader)
         {
             while (toProcess.TryDequeue(out long current))
