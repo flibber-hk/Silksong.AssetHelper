@@ -1,67 +1,80 @@
-﻿using BepInEx.Logging;
+﻿using Newtonsoft.Json;
 using System;
 using System.IO;
 
 namespace Silksong.AssetHelper.Internal;
 
-internal static class CacheManager
+/// <summary>
+/// Object that is loaded from cache if possible, and instantiated if not.
+/// 
+/// The object is saved when quitting the application.
+/// </summary>
+internal class CachedObject<T> where T : class
 {
-    private static readonly ManualLogSource Log = Logger.CreateLogSource($"{nameof(AssetHelper)}.{nameof(CacheManager)}");
-
     /// <summary>
-    /// Write an object to the cache, regardless of whether or not is already there.
+    /// The last acceptable version for cached data. When making a change that impacts cached data,
+    /// this number should be increased.
     /// </summary>
-    public static void WriteObj<T>(T obj, string filename) where T : class
-    {
-        string filePath = Path.Combine(AssetPaths.CacheDirectory, filename);
+    private static readonly Version _lastAcceptableVersion = Version.Parse("0.1.0");
 
-        VersionedObject<T> toCache = new(AssetHelperPlugin.Version, obj);
-        toCache?.SerializeToFile(filePath);
-    }
+    private CachedObject() { }
+        
+    [JsonProperty] public required string SilksongVersion { get; init; }
+    [JsonProperty] public required string PluginVersion { get; init; }
+    [JsonProperty] public required T Value { get; set; }
 
-    private static bool VersionMatches(string? self, string? other)
+    private bool IsValid()
     {
-        if (self is null || other is null)
+        if (SilksongVersion == null || PluginVersion == null)
+        {
+            return false;
+        }
+        
+        if (AssetPaths.SilksongVersion != SilksongVersion)
         {
             return false;
         }
 
-        if (!Version.TryParse(self, out Version selfV) || !Version.TryParse(other, out Version otherV))
+        Version current = Version.Parse(AssetHelperPlugin.Version);
+        Version fromCache = Version.Parse(PluginVersion);
+        if (fromCache > current)
+        {
+            return false;
+        }
+        if (fromCache < _lastAcceptableVersion)
+        {
+            return false;
+        }
+        // Automatically regenerate cache on major version change
+        if (fromCache.Major != current.Major)
         {
             return false;
         }
 
-        return selfV.Major == otherV.Major && selfV.Minor == otherV.Minor;
+        return true;
     }
 
-    /// <summary>
-    /// If the filename exists in the cache folder, load the object using Newtonsoft.Json.
-    /// If the filename does not exist, compute the object, store it in the file and return it.
-    /// 
-    /// The function will be recalculated each time the Silksong version or
-    /// <see cref="AssetHelperPlugin"/> major/minor version changes.
-    /// </summary>
-    /// <typeparam name="T">The type of the object.</typeparam>
-    /// <param name="generator">The function used to generate the object.</param>
-    /// <param name="filename">The name of the cache file.</param>
-    /// <returns>The object.</returns>
-    public static T GetCached<T>(
-        Func<T> generator,
-        string filename) where T : class
+    public static CachedObject<T> CreateSynced(string filename, Func<T> createDefault)
     {
         string filePath = Path.Combine(AssetPaths.CacheDirectory, filename);
 
-        if (JsonExtensions.TryLoadFromFile<VersionedObject<T>>(filePath, out VersionedObject<T>? fromCache))
+        // Check if the object already exists
+        if (JsonExtensions.TryLoadFromFile<CachedObject<T>>(filePath, out CachedObject<T>? fromCache))
         {
-            if (fromCache.Value is not null && VersionMatches(fromCache.Version, AssetHelperPlugin.Version))
+            if (fromCache.Value is not null && fromCache.IsValid())
             {
-                return fromCache.Value;
+                GameEvents.OnQuitApplication += () => fromCache.SerializeToFile(filePath);
+                return fromCache;
             }
         }
 
-        T generated = generator();
-        WriteObj(generated, filename);
-
-        return generated;
+        CachedObject<T> created = new()
+        {
+            SilksongVersion = AssetPaths.SilksongVersion,
+            PluginVersion = AssetHelperPlugin.Version,
+            Value = createDefault()
+        };
+        GameEvents.OnQuitApplication += () => created.SerializeToFile(filePath);
+        return created;
     }
 }

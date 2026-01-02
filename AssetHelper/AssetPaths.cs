@@ -11,58 +11,40 @@ namespace Silksong.AssetHelper;
 /// </summary>
 public static class AssetPaths
 {
-    private static string? _bundleFolder;
-    private static string? _catalogFolder;
-    private static string? _cacheDirectory;
+    private static string CreateIfNeeded(this string path)
+    {
+        Directory.CreateDirectory(path);
+        return path;
+    }
+
     private static string? _silksongVersion;
 
     /// <summary>
-    /// The folder containing asset bundles.
+    /// The base game folder containing asset bundles.
     /// </summary>
     public static string BundleFolder
     {
         get
         {
-            _bundleFolder ??= GetBundleFolder();
-            return _bundleFolder;
+            string rootFolder = Application.streamingAssetsPath;
+            string osFolder = Application.platform switch
+            {
+                RuntimePlatform.WindowsPlayer => "StandaloneWindows64",
+                RuntimePlatform.OSXPlayer => "StandaloneOSX",
+                RuntimePlatform.LinuxPlayer => "StandaloneLinux64",
+                _ => ""
+            };
+            return Path.Combine(rootFolder, "aa", osFolder);
         }
     }
 
     /// <summary>
-    /// Path to the catalog folder
+    /// Path to the AssetHelper catalog folder.
     /// </summary>
-    public static string CatalogFolder
-    {
-        get
-        {
-            _catalogFolder ??= GetCatalogFolder();
-            return _catalogFolder;
-        }
-    }
-
-    private static string GetCatalogFolder()
-    {
-        return Path.Combine(
-                AssetPaths.CacheDirectory,
-                "Catalogs"
-        );
-    }
-
-    private static string GetBundleFolder()
-    {
-        string rootFolder = Application.streamingAssetsPath;
-        string osFolder = Application.platform switch
-        {
-            RuntimePlatform.WindowsPlayer => "StandaloneWindows64",
-            RuntimePlatform.OSXPlayer => "StandaloneOSX",
-            RuntimePlatform.LinuxPlayer => "StandaloneLinux64",
-            _ => ""
-        };
-        return Path.Combine(rootFolder, "aa", osFolder);
-    }
+    public static string CatalogFolder => Path.Combine(CacheDirectory, "Catalogs").CreateIfNeeded();
 
     /// <summary>
-    /// Get the path to the scene bundle for a given scene.
+    /// Get the path to the base game scene bundle for a given scene.
     /// </summary>
     public static string GetScenePath(string sceneName) => Path.Combine(BundleFolder, "scenes_scenes_scenes", $"{sceneName.ToLowerInvariant()}.bundle");
 
@@ -84,32 +66,28 @@ public static class AssetPaths
         as string
         ?? "UNKNOWN";
 
-    /// <summary>
-    /// Directory storing cached information for this version of Silksong.
-    /// </summary>
-    internal static string CacheDirectory
+    private static string CacheSubfolder
     {
         get
         {
-            if (_cacheDirectory is not null) return _cacheDirectory;
-
-            string silksongVersion = GetSilksongVersion();
-            string dir = Path.Combine(
-                Paths.CachePath,
+            string s;
 #if DEBUG
-                $"{nameof(AssetHelper)}_DEBUG",
+            s = $"{nameof(AssetHelper)}_DEBUG";
 #else
-                nameof(AssetHelper),
+            s = nameof(AssetHelper);
 #endif
-                $"v{silksongVersion}");
-
-            Directory.CreateDirectory(dir);
-
-            _cacheDirectory = dir;
-            return dir;
+            return s;
         }
     }
 
+    /// <summary>
+    /// Directory storing cached information and data for this version of Silksong.
+    /// </summary>
+    internal static string CacheDirectory => Path.Combine(Paths.CachePath, CacheSubfolder).CreateIfNeeded();
+
+    /// <summary>
+    /// Directory containing this assembly.
+    /// </summary>
     internal static string AssemblyFolder => Directory.GetParent(typeof(AssetPaths).Assembly.Location).FullName;
 
     private static string _debugDataDir = Path.Combine(AssemblyFolder, "DebugData");
@@ -121,14 +99,7 @@ public static class AssetPaths
     /// </summary>
     public static string DebugDataDir
     {
-        get
-        {
-            if (!Directory.Exists(_debugDataDir))
-            {
-                Directory.CreateDirectory(_debugDataDir);
-            }
-            return _debugDataDir;
-        }
+        get => _debugDataDir.CreateIfNeeded();
         set => _debugDataDir = value;
     }
 }

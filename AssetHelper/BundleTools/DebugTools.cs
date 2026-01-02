@@ -13,7 +13,6 @@ using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 using AssetsTools.NET.Extra;
-using Silksong.AssetHelper.BundleTools.Repacking;
 
 namespace Silksong.AssetHelper.BundleTools;
 
@@ -131,11 +130,11 @@ public static class DebugTools
 
     private static Dictionary<string, string> GenerateBundleNameLookup()
     {
-        Dictionary<string, string> lookup = new();
+        Dictionary<string, string> lookup = [];
 
         foreach ((string name, string key) in AssetsData.BundleKeys!)
         {
-            var op = Addressables.LoadAssetAsync<IAssetBundleResource>(key);
+            AsyncOperationHandle<IAssetBundleResource> op = Addressables.LoadAssetAsync<IAssetBundleResource>(key);
             op.WaitForCompletion();
             lookup[op.Result.GetAssetBundle().name] = name;
             Addressables.Release(op);
@@ -158,7 +157,7 @@ public static class DebugTools
             throw new InvalidOperationException($"{nameof(GetLoadedBundleNames)} cannot be called until Addressables is loaded!");
         }
 
-        _bundleNameLookup ??= CacheManager.GetCached(GenerateBundleNameLookup, "bundle_name_lookup.json");
+        _bundleNameLookup ??= CachedObject<Dictionary<string, string>>.CreateSynced("bundle_name_lookup.json", GenerateBundleNameLookup).Value;
 
         names = [];
         unknown = [];

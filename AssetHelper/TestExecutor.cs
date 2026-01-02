@@ -18,6 +18,8 @@ namespace Silksong.AssetHelper;
 /// </summary>
 internal static class TestExecutor
 {
+    public static int Completed { get;private set; }
+
     public static void GenFromFile()
     {
         if (!JsonExtensions.TryLoadFromFile(Path.Combine(AssetPaths.AssemblyFolder, "serialization_data.json"), out Dictionary<string, List<string>>? archData))
@@ -41,6 +43,7 @@ internal static class TestExecutor
                 data[scene] = dat;
                 miniSw.Stop();
                 AssetHelperPlugin.InstanceLogger.LogInfo($"Scene {scene} complete {miniSw.ElapsedMilliseconds} ms");
+                Completed += 1;
             }
             catch (Exception ex)
             {

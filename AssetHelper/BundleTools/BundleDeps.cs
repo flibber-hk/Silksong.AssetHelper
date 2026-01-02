@@ -13,8 +13,8 @@ public static class BundleDeps
 {
     internal static void Setup()
     {
-        CabLookup = CacheManager.GetCached(GenerateCabLookup, "cabs.json");
-        DirectDependencyLookup = new("direct_deps.json");
+        CabLookup = CachedObject<IReadOnlyDictionary<string, string>>.CreateSynced("cabs.json", GenerateCabLookup).Value;
+        DirectDependencyLookup = CachedObject<Dictionary<string, List<string>>>.CreateSynced("direct_deps.json", () => []);
     }
     
     /// <summary>
