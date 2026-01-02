@@ -64,6 +64,18 @@ public static class ObjPathUtil
     }
 
     /// <summary>
+    /// Get the path of descendant relative to ancestor.
+    /// </summary>
+    /// <param name="ancestor"></param>
+    /// <param name="descendant"></param>
+    /// <param name="relativePath">Null if ancestor = descendant (but true is still returned in this case).</param>
+    /// <returns>True if descendant is a descendant of ancestor (or they are the same).</returns>
+    public static bool TryFindRelativePath(string ancestor, string descendant, out string? relativePath)
+    {
+        return TryFindAncestor([ancestor], descendant, out _, out relativePath);
+    }
+
+    /// <summary>
     /// Get the ancestor of the given game object within the collection of paths.
     /// 
     /// Typically, paths should be a set of highest nodes, see <see cref="GetHighestNodes(ICollection{string})" />.
@@ -73,16 +85,16 @@ public static class ObjPathUtil
     /// <param name="paths">A list of paths of candidate ancestors.</param>
     /// <param name="objName">A path to check.</param>
     /// <param name="ancestorPath">The path representing the ancestor.</param>
-    /// <param name="relativePath">The path relative to the ancestor.</param>
+    /// <param name="relativePath">The path relative to the ancestor. This will be null if the ancestor is equal to the object.</param>
     /// <returns>False if the supplied game object has no ancestor in the collection.</returns>
-    public static bool TryFindAncestor(List<string> paths, string objName, [MaybeNullWhen(false)] out string ancestorPath, [MaybeNullWhen(false)] out string relativePath)
+    public static bool TryFindAncestor(List<string> paths, string objName, [MaybeNullWhen(false)] out string ancestorPath, out string? relativePath)
     {
         foreach (string path in paths ?? Enumerable.Empty<string>())
         {
             if (objName == path)
             {
                 ancestorPath = objName;
-                relativePath = string.Empty;
+                relativePath = null;
                 return true;
             }
 
