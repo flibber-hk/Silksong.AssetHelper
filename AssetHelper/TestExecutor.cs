@@ -2,6 +2,7 @@
 using Silksong.AssetHelper.BundleTools.Repacking;
 using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.LoadedAssets;
+using Silksong.UnityHelper.Extensions;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -22,19 +23,24 @@ internal static class TestExecutor
 
     public static void GenFromFile()
     {
-        if (!JsonExtensions.TryLoadFromFile(Path.Combine(AssetPaths.AssemblyFolder, "serialization_data.json"), out Dictionary<string, List<string>>? archData))
+        if (!JsonExtensions.TryLoadFromFile(Path.Combine(AssetPaths.AssemblyFolder, "serialization_data.json"), out Dictionary<string, List<string>>? data))
         {
             AssetHelperPlugin.InstanceLogger.LogInfo($"No serialization_data.json found next to this assembly");
             return;
         }
 
+        Gen(data!);
+    }
+
+    public static void Gen(Dictionary<string, List<string>> rpData)
+    {
         Directory.CreateDirectory(Path.Combine(AssetPaths.AssemblyFolder, "ser_dump"));
 
         SceneRepacker r = new StrippedSceneRepacker();
         Dictionary<string, RepackedBundleData> data = [];
 
         Stopwatch sw = Stopwatch.StartNew();
-        foreach ((string scene, List<string> objs) in archData!)
+        foreach ((string scene, List<string> objs) in rpData!)
         {
             try
             {
@@ -62,7 +68,7 @@ internal static class TestExecutor
         AssetHelperPlugin.InstanceLogger.LogInfo($"Start with loaded bundle count: {AssetBundle.GetAllLoadedAssetBundles().Count()}: {sw.ElapsedMilliseconds} ms");
 
         // Load dependencies
-        AssetBundleGroup? dependencyGrp = AssetBundleGroup.CreateForScene(sceneName, true);
+        AssetBundleGroup? dependencyGrp = AssetBundleGroup.CreateForScene(sceneName, false);  // Set to true for shallow bundle
 
         yield return dependencyGrp.LoadAsync();
 
