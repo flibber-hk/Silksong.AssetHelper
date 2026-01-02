@@ -86,6 +86,11 @@ public static class AssetPaths
     internal static string CacheDirectory => Path.Combine(Paths.CachePath, CacheSubfolder).CreateIfNeeded();
 
     /// <summary>
+    /// Directory storing repacked scenes.
+    /// </summary>
+    internal static string RepackedSceneBundleDir => Path.Combine(CacheDirectory, "repacked_scenes");
+
+    /// <summary>
     /// Directory containing this assembly.
     /// </summary>
     internal static string AssemblyFolder => Directory.GetParent(typeof(AssetPaths).Assembly.Location).FullName;
