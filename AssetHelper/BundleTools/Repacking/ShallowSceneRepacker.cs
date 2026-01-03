@@ -43,7 +43,7 @@ public class ShallowSceneRepacker : SceneRepacker
         AssetsManager mgr = BundleUtils.CreateDefaultManager();
 
         // Load the scene bundle
-        MemoryStream ms = new(File.ReadAllBytes(sceneBundlePath));
+        using MemoryStream ms = new(File.ReadAllBytes(sceneBundlePath));
         BundleFileInstance sceneBun = mgr.LoadBundleFile(ms, sceneBundlePath);
 
         if (!mgr.TryFindAssetsFiles(sceneBun, out BundleUtils.SceneBundleInfo sceneBundleInfo))

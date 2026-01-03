@@ -63,8 +63,10 @@ public static class BundleDeps
         }
 
         AssetsManager mgr = new();
+        string sceneBundlePath = Path.Combine(AssetPaths.BundleFolder, bundleFile);
+        using MemoryStream ms = new(File.ReadAllBytes(sceneBundlePath));
+        BundleFileInstance bun = mgr.LoadBundleFile(ms, sceneBundlePath);
 
-        BundleFileInstance bun = mgr.LoadBundleFile(Path.Combine(AssetPaths.BundleFolder, bundleFile));
         AssetsFileInstance afileInst = mgr.LoadAssetsFileFromBundle(bun, 0, false);
         AssetsFile afile = afileInst.file;
         AssetFileInfo assetInfos = afile.GetAssetsOfType(AssetClassID.AssetBundle)[0];

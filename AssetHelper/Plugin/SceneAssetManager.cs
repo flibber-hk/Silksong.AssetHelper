@@ -19,6 +19,9 @@ internal static class SceneAssetManager
 
     private static RepackDataCollection? _repackData;
 
+    /// <summary>
+    /// Event raised each time a single scene is repacked.
+    /// </summary>
     internal static event Action? SingleRepackOperationCompleted;
 
     /// <summary>
@@ -29,7 +32,7 @@ internal static class SceneAssetManager
     {
         string repackDataPath = Path.Combine(AssetPaths.RepackedSceneBundleDir, "repack_data.json");
 
-        if (JsonExtensions.TryLoadFromFile<RepackDataCollection>(repackDataPath, out RepackDataCollection? repackData))
+        if (JsonExtensions.TryLoadFromFile(repackDataPath, out RepackDataCollection? repackData))
         {
             _repackData = repackData;
         }
@@ -74,40 +77,14 @@ internal static class SceneAssetManager
 
         SceneRepacker repacker = new StrippedSceneRepacker();
 
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {updatedToRepack.Count} scenes");
         foreach ((string scene, HashSet<string> request) in updatedToRepack)
         {
+            AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {request.Count} objects in scene {scene}");
             RepackedBundleData newData = repacker.Repack(scene, request.ToList(), Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{scene}.bundle"));
             _repackData[scene] = newData;
             _repackData.SerializeToFile(repackDataPath);
             SingleRepackOperationCompleted?.Invoke();
         }
-    }
-
-    /// <summary>
-    /// Check whether the given scene object is loadable using AssetHelper.
-    /// 
-    /// This function assumes that the game object existed in the original scene.
-    /// </summary>
-    /// <param name="sceneName">The scene name.</param>
-    /// <param name="objName">The hierarchical name of the given game object.</param>
-    /// <param name="assetPath">The path within the asset bundle.</param>
-    /// <param name="relativePath">The path to the game object relative to the asset, or null
-    /// if the asset and the requested game object are the same.</param>
-    private static bool TryGetSceneAssetData(
-        string sceneName,
-        string objName,
-        [MaybeNullWhen(false)] out string assetPath,
-        out string? relativePath
-        )
-    {
-        if (_repackData == null
-            || !_repackData.TryGetValue(sceneName, out RepackedBundleData data))
-        {
-            assetPath = null;
-            relativePath = null;
-            return false;
-        }
-
-        return data.CanLoad(objName, out assetPath, out relativePath);
     }
 }

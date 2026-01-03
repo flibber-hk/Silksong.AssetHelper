@@ -8,23 +8,35 @@ namespace Silksong.AssetHelper.Plugin;
 /// </summary>
 public static class SceneAssetAPI
 {
+    internal static bool RequestApiAvailable { get; set; } = true;
+
+    internal static Dictionary<string, HashSet<string>> sceneAssetRequest { get; } = [];
+
     /// <summary>
     /// Request the given asset paths in the given scene to be repacked.
     /// 
-    /// This function must be called during your plugin's Awake method.
+    /// This function must be called during a plugin's Awake method.
     /// </summary>
     /// <param name="sceneName">The name of the scene.</param>
     /// <param name="assetPaths">A list of asset paths to be repacked. They should be given in the hierarchy.</param>
     public static void RequestSceneAssets(string sceneName, IEnumerable<string> assetPaths)
     {
-        // sceneName = sceneName.ToLowerInvariant();
-        throw new NotImplementedException();
+        if (!RequestApiAvailable)
+        {
+            throw new InvalidOperationException($"Scene asset requests must be made during a plugin's Awake method! Scene {sceneName}");
+        }
+
+        sceneName = sceneName.ToLowerInvariant();
+
+        HashSet<string> updated = sceneAssetRequest.TryGetValue(sceneName, out HashSet<string> request) ? request : [];
+        updated.UnionWith(assetPaths);
+        sceneAssetRequest[sceneName] = updated;
     }
 
     /// <summary>
     /// Request that the given asset in the given scene be repacked.
     /// 
-    /// This function must be called during your plugin's Awake method.
+    /// This function must be called during a plugin's Awake method.
     /// </summary>
     /// <param name="sceneName">The name of the scene.</param>
     /// <param name="assetPath">An asset path to be repacked.</param>
@@ -33,7 +45,7 @@ public static class SceneAssetAPI
     /// <summary>
     /// Request that the given assets in the given scenes be repacked.
     /// 
-    /// This function must be called during your plugin's Awake method.
+    /// This function must be called during a plugin's Awake method.
     /// </summary>
     /// <param name="assetData">A lookup (scene : list of paths) of game objects that should be repacked.</param>
     public static void RequestSceneAssets(Dictionary<string, List<string>> assetData)

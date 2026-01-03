@@ -4,6 +4,7 @@ using BepInEx.Logging;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using Silksong.AssetHelper.BundleTools;
+using Silksong.AssetHelper.Plugin;
 using System.Collections;
 using System.Collections.Generic;
 
@@ -33,7 +34,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
         // TODO - remove this when assetstools.net gets updated
         _atHook = new ILHook(typeof(AssetTypeValueIterator).GetMethod(nameof(AssetTypeValueIterator.ReadNext)), PatchATVI);
-        
+
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
     }
 
@@ -62,6 +63,8 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
     private IEnumerator Start()
     {
+        SceneAssetAPI.RequestApiAvailable = false;
+
         // Addressables isn't initialized until the next frame
         yield return null;
 
@@ -71,11 +74,13 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
             bool b = AssetsData.TryLoadBundleKeys();
             if (b)
             {
-                yield break;
+                break;
             }
 
             yield return null;
         }
+
+        SceneAssetManager.Run(SceneAssetAPI.sceneAssetRequest);
     }
 
     private void OnApplicationQuit()

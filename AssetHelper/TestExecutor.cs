@@ -10,6 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.AddressableAssets;
 
 namespace Silksong.AssetHelper;
 
@@ -61,7 +62,69 @@ internal static class TestExecutor
         AssetHelperPlugin.InstanceLogger.LogInfo($"All scenes complete {sw.ElapsedMilliseconds} ms");
     }
 
-    public static IEnumerator InstantiateAsset(string bundleFile, string sceneName, string assetPath)
+
+    public static void RunArchitectTest()
+    {
+        if (!JsonExtensions.TryLoadFromFile<Dictionary<string, RepackedBundleData>>(Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", "repack_data.json"), out var data))
+        {
+            return;
+        }
+
+        List<string> sceneNames = data.Keys.ToList();
+
+        Stopwatch sw = Stopwatch.StartNew();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Determining deps for {sceneNames.Count} scenes");
+        foreach (string sceneName in sceneNames)
+        {
+            BundleDeps.DetermineDirectDeps($"scenes_scenes_scenes/{sceneName}.bundle");
+        }
+        sw.Stop();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Determined deps in {sw.ElapsedMilliseconds} ms");
+    }
+
+    public static IEnumerator InstantiateAll()
+    {
+        Stopwatch sw = Stopwatch.StartNew();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Start with loaded bundle count: {AssetBundle.GetAllLoadedAssetBundles().Count()}: {sw.ElapsedMilliseconds} ms");
+
+        // Load serda
+        if (!JsonExtensions.TryLoadFromFile<Dictionary<string, RepackedBundleData>>(Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", "repack_data.json"), out var data))
+        {
+            yield break;
+        }
+        List<string> allDependencies = new();
+        foreach (string scene in data.Keys)
+        {
+            string key = $"scenes_scenes_scenes/{scene.ToLowerInvariant()}";
+            allDependencies.AddRange(BundleDeps.DetermineDirectDeps(key).Where(x => x != key));
+        }
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Build deps: {allDependencies.Count}: {sw.ElapsedMilliseconds} ms");
+        AssetBundleGroup abg = new(allDependencies);
+        yield return abg.LoadAsync();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Deps loaded, new count: {AssetBundle.GetAllLoadedAssetBundles().Count()}: {sw.ElapsedMilliseconds} ms");
+
+        Dictionary<(string, string), GameObject> allGos = [];
+
+        foreach ((string scene, RepackedBundleData dat) in data)
+        {
+            Stopwatch miniSw = Stopwatch.StartNew();
+            var req = AssetBundle.LoadFromFileAsync(Path.Combine(AssetPaths.AssemblyFolder, "ser_dump", $"repacked_{scene}.bundle"));
+            yield return req;
+            AssetBundle loadedModBundle = req.assetBundle;
+            AssetHelperPlugin.InstanceLogger.LogInfo($"Bundle loaded {scene}: {miniSw.ElapsedMilliseconds} ms");
+
+            var assetsReq = loadedModBundle.LoadAllAssetsAsync<GameObject>();
+            yield return assetsReq;
+            AssetHelperPlugin.InstanceLogger.LogInfo($"AssetReq completed: {miniSw.ElapsedMilliseconds} ms");
+
+            int ct = assetsReq.allAssets.Where(x => x != null).Count();
+            AssetHelperPlugin.InstanceLogger.LogInfo($"Loaded {ct} assets, expected {dat.GameObjectAssets?.Count ?? 0}");
+
+            yield return null;
+        }
+    }
+
+    public static IEnumerator InstantiateAssets(string bundleFile, string sceneName, string assetPath)
     {
         Stopwatch sw = Stopwatch.StartNew();
 
