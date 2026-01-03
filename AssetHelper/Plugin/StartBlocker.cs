@@ -16,6 +16,7 @@ internal static class StartBlocker
 
     private static void PrependStartManagerStart(StartManager self, ref IEnumerator returnValue)
     {
+        // TODO - this func should be a no-op if there's no repacking to do
         returnValue = WrapStartManagerStart(self, returnValue);
     }
 
