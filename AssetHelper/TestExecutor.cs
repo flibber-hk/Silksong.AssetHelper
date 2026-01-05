@@ -195,7 +195,7 @@ internal static class TestExecutor
         Dictionary<string, string> cab2key = new();
         foreach ((string cab, string name) in BundleDeps.CabLookup)
         {
-            string origPrimaryKey = AssetsData.ToBundleKey(name);
+            string origPrimaryKey = AddressablesData.ToBundleKey(name);
             cab2key[cab] = nameof(AssetHelper) + origPrimaryKey;
         }
 

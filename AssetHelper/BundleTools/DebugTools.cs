@@ -33,7 +33,7 @@ public static class DebugTools
     {
         string dumpFile = Path.Combine(AssetPaths.DebugDataDir, "bundle_keys.json");
 
-        AssetsData.InvokeAfterAddressablesLoaded(() => AssetsData.BundleKeys.SerializeToFileInBackground(dumpFile));
+        AddressablesData.InvokeAfterAddressablesLoaded(() => AddressablesData.BundleKeys.SerializeToFileInBackground(dumpFile));
     }
 
     /// <summary>
@@ -43,7 +43,7 @@ public static class DebugTools
     /// </summary>
     public static void DumpAllAssetNames()
     {
-        AssetsData.InvokeAfterAddressablesLoaded(DumpAllAssetNamesInternal);
+        AddressablesData.InvokeAfterAddressablesLoaded(DumpAllAssetNamesInternal);
     }
 
     private static void DumpAllAssetNamesInternal()
@@ -54,7 +54,7 @@ public static class DebugTools
         NameListLookup sceneNames = [];
         
         Stopwatch sw = Stopwatch.StartNew();
-        foreach ((string name, string key) in AssetsData.BundleKeys!)
+        foreach ((string name, string key) in AddressablesData.BundleKeys!)
         {
             AsyncOperationHandle<IAssetBundleResource> op = Addressables.LoadAssetAsync<IAssetBundleResource>(key);
             IAssetBundleResource rsc = op.WaitForCompletion();
@@ -91,7 +91,7 @@ public static class DebugTools
     /// </summary>
     public static void DumpAllAddressableAssets() 
     {
-        AssetsData.InvokeAfterAddressablesLoaded(DumpAllAddressableAssetsInternal);
+        AddressablesData.InvokeAfterAddressablesLoaded(DumpAllAddressableAssetsInternal);
     }
 
     private static void DumpAllAddressableAssetsInternal()
@@ -150,7 +150,7 @@ public static class DebugTools
     {
         Dictionary<string, string> lookup = [];
 
-        foreach ((string name, string key) in AssetsData.BundleKeys!)
+        foreach ((string name, string key) in AddressablesData.BundleKeys!)
         {
             AsyncOperationHandle<IAssetBundleResource> op = Addressables.LoadAssetAsync<IAssetBundleResource>(key);
             op.WaitForCompletion();
@@ -170,7 +170,7 @@ public static class DebugTools
     /// <exception cref="InvalidOperationException">Raised if this is called before Addressables is ready.</exception>
     public static LoadedBundleNames GetLoadedBundleNames(out List<string> names, out List<string> unknown)
     {
-        if (!AssetsData.IsAddressablesLoaded)
+        if (!AddressablesData.IsAddressablesLoaded)
         {
             throw new InvalidOperationException($"{nameof(GetLoadedBundleNames)} cannot be called until Addressables is loaded!");
         }

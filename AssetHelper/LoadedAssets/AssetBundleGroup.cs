@@ -77,7 +77,7 @@ public class AssetBundleGroup(List<string> bundleNames)
             bool failure = false;
             foreach (string name in _bundleNames)
             {
-                string key = AssetsData.ToBundleKey(name);
+                string key = AddressablesData.ToBundleKey(name);
                 if (key == null)
                 {
                     failure = true;

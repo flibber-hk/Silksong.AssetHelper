@@ -5,7 +5,6 @@ using BepInEx.Logging;
 using MonoMod.Cil;
 using MonoMod.RuntimeDetour;
 using Silksong.AssetHelper.BundleTools;
-using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.Plugin;
 using System;
 using System.Buffers;
@@ -99,7 +98,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         while (true)
         {
             // Check this just in case
-            bool b = AssetsData.TryLoadBundleKeys();
+            bool b = AddressablesData.TryLoadBundleKeys();
             if (b)
             {
                 break;

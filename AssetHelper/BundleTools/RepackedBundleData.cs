@@ -15,25 +15,6 @@ public class RepackedBundleData
     public string? RepackStrategy { get; set; }
 
     /// <summary>
-    /// The Silksong version used to create this bundle.
-    /// </summary>
-    public string? SilksongVersion { get; set; }
-
-    /// <summary>
-    /// The Asset Helper version used to create this bundle.
-    /// </summary>
-    public string? PluginVersion { get; set; }
-    
-    /// <summary>
-    /// Construct an instance of this class with default version parameters.
-    /// </summary>
-    public RepackedBundleData()
-    {
-        SilksongVersion = AssetPaths.SilksongVersion;
-        PluginVersion = AssetHelperPlugin.Version;
-    }
-
-    /// <summary>
     /// The name of the internal asset bundle.
     /// </summary>
     public string? BundleName { get; set; }

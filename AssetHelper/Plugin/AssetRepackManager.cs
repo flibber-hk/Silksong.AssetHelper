@@ -9,10 +9,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
-using RepackDataCollection = System.Collections.Generic.Dictionary<string, Silksong.AssetHelper.BundleTools.RepackedBundleData>;
+using UnityEngine.ResourceManagement.ResourceLocations;
+using UnityEngine.ResourceManagement.ResourceProviders;
+using RepackDataCollection = System.Collections.Generic.Dictionary<string, Silksong.AssetHelper.Plugin.RepackedSceneBundleData>;
 
 namespace Silksong.AssetHelper.Plugin;
 
@@ -30,13 +33,16 @@ internal static class AssetRepackManager
 
     private static void PrependStartManagerStart(StartManager self, ref IEnumerator returnValue)
     {
-        bool shouldRepack = Prepare();
-
-        returnValue = WrapStartManagerStart(self, returnValue, shouldRepack);
+        returnValue = WrapStartManagerStart(self, returnValue);
     }
 
-    private static IEnumerator WrapStartManagerStart(StartManager self, IEnumerator original, bool shouldRepack)
+    private static IEnumerator WrapStartManagerStart(StartManager self, IEnumerator original)
     {
+        // This should already be the case, but we should check just in case it matters.
+        yield return new WaitUntil(() => AddressablesData.IsAddressablesLoaded);
+
+        bool shouldRepack = Prepare();
+
         if (shouldRepack)
         {
             IEnumerator runner = Run();
@@ -86,41 +92,71 @@ internal static class AssetRepackManager
             _repackData = [];
         }
 
+        // Any data with a metadata mismatch should be removed from the dictionary
+        _repackData = _repackData.Where(kvp => !MetadataMismatch(kvp.Key, kvp.Value)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
         _toRepack = [];
 
         foreach ((string scene, HashSet<string> request) in AssetRequestAPI.SceneAssetRequest)
         {
-            if (!_repackData.TryGetValue(scene, out RepackedBundleData existingBundleData))
+            if (!_repackData.TryGetValue(scene, out RepackedSceneBundleData existingBundleData))
+            {
+                _toRepack[scene] = request;
+                continue;
+            }
+            if (existingBundleData.Data is null)
             {
                 _toRepack[scene] = request;
                 continue;
             }
 
-            // TODO - accept silksong version changes if the bundle hasn't changed
-            Version current = Version.Parse(AssetHelperPlugin.Version);
-            if (existingBundleData.SilksongVersion != AssetPaths.SilksongVersion
-                || !Version.TryParse(existingBundleData.PluginVersion ?? string.Empty, out Version oldPluginVersion)
-                || oldPluginVersion > current
-                || oldPluginVersion < _lastAcceptablePluginVersion
-                )
-            {
-                _toRepack[scene] = request;
-                continue;
-            }
-
-            if (request.All(x => existingBundleData.TriedToRepack(x)))
+            if (request.All(x => existingBundleData.Data.TriedToRepack(x)))
             {
                 // No need to re-repack as there's nothing new to try
                 continue;
             }
 
+            // Include everything from the old bundle - perhaps this should be a config option?
             _toRepack[scene] = new(request
-                .Union(existingBundleData.GameObjectAssets?.Values ?? Enumerable.Empty<string>())
-                .Union(existingBundleData.NonRepackedAssets ?? Enumerable.Empty<string>())
+                .Union(existingBundleData.Data.GameObjectAssets?.Values ?? Enumerable.Empty<string>())
+                .Union(existingBundleData.Data.NonRepackedAssets ?? Enumerable.Empty<string>())
                 );
         }
 
         return _toRepack.Count > 0;
+    }
+
+    /// <summary>
+    /// Check if we have to completely repack because of a metadata change.
+    /// </summary>
+    private static bool MetadataMismatch(string scene, RepackedSceneBundleData existingData)
+    {
+        if (!Version.TryParse(existingData.PluginVersion ?? string.Empty, out Version oldPluginVersion)
+                || oldPluginVersion > Version.Parse(AssetHelperPlugin.Version)
+                || oldPluginVersion < _lastAcceptablePluginVersion)
+        {
+            // Mismatch: the version of the plugin used to repack needs to be after the last acceptable version.
+            // We do not accept versions from the future.
+            return true;
+        }
+
+        if (existingData.SilksongVersion == AssetPaths.SilksongVersion)
+        {
+            // If the Silksong version matches, then we're definitely fine.
+            return false;
+        }
+
+        if (AddressablesData.TryGetLocationForScene(scene, out IResourceLocation? location)
+            && location.Data is AssetBundleRequestOptions opts
+            && !string.IsNullOrEmpty(opts.Hash)
+            && !string.IsNullOrEmpty(existingData.BundleHash)
+            && opts.Hash == existingData.BundleHash)
+        {
+            // Hash matches, so we can accept the mismatched silksong version
+            return false;
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -135,12 +171,26 @@ internal static class AssetRepackManager
         {
             Stopwatch sw = Stopwatch.StartNew();
             AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {request.Count} objects in scene {scene}");
-            RepackedBundleData newData = repacker.Repack(
+            RepackedBundleData repackData = repacker.Repack(
                 AssetPaths.GetScenePath(scene),
                 request.ToList(),
                 Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{scene}.bundle")
                 );
-            _repackData[scene] = newData;
+
+            string? hash = null;
+            if (AddressablesData.TryGetLocationForScene(scene, out IResourceLocation? location) && location.Data is AssetBundleRequestOptions opts)
+            {
+                hash = opts.Hash;
+            }
+
+            RepackedSceneBundleData sceneRepackData = new()
+            {
+                SceneName = scene,
+                BundleHash = hash,
+                Data = repackData
+            };
+
+            _repackData[scene] = sceneRepackData;
             _repackData.SerializeToFile(_repackDataPath);
             AssetHelperPlugin.InstanceLogger.LogInfo($"Repacked {scene} in {sw.ElapsedMilliseconds} ms");
 
@@ -152,10 +202,11 @@ internal static class AssetRepackManager
     {
         AssetHelperPlugin.InstanceLogger.LogInfo($"Creating catalog");
         CustomCatalogBuilder cbr = new(SCENE_ASSET_CATALOG_KEY);
-        foreach ((string sceneName, RepackedBundleData bunData) in data)
+        foreach ((string sceneName, RepackedSceneBundleData repackBunData) in data)
         {
+            if (repackBunData.Data == null) continue;
             string bundlePath = Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{sceneName}.bundle");
-            cbr.AddRepackedSceneData(sceneName, bunData, bundlePath);
+            cbr.AddRepackedSceneData(sceneName, repackBunData.Data, bundlePath);
         }
 
         // TODO - add in requested child paths

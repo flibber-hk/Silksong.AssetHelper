@@ -39,7 +39,7 @@ internal class CustomCatalogBuilder
                 continue;
             }
 
-            if (!AssetsData.TryStrip(location.PrimaryKey, out string? bundleName))
+            if (!AddressablesData.TryStrip(location.PrimaryKey, out string? bundleName))
             {
                 continue;
             }
