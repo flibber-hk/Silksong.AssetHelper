@@ -235,8 +235,14 @@ internal static class TestExecutor
         List<ContentCatalogDataEntry> catalog = [.. bundleLocs, .. assetLocs];
 
         Stopwatch writeSw = Stopwatch.StartNew();
-        CatalogUtils.WriteCatalog(catalog, "testCatalog");
+        string catalogPath = CatalogUtils.WriteCatalog(catalog, "testCatalog");
         writeSw.Stop();
         AssetHelperPlugin.InstanceLogger.LogInfo($"Wrote catalog in {writeSw.ElapsedMilliseconds} ms");
+
+        Stopwatch loadSw = Stopwatch.StartNew();
+        IResourceLocator lr = Addressables.LoadContentCatalogAsync(catalogPath).WaitForCompletion();
+        loadSw.Stop();
+        AssetHelperPlugin.InstanceLogger.LogInfo($"Loaded catalog in {loadSw.ElapsedMilliseconds} ms");
+        DebugTools.DumpAllAddressableAssets(lr, "full_non_scene.json");
     }
 }
