@@ -28,8 +28,13 @@ internal class CustomCatalogBuilder
     {
         _primaryKeyPrefix = primaryKeyPrefix;
         _baseBundleEntries = [];
-        foreach (IResourceLocation location in AddressablesData.MainLocator!.AllLocations)
+        foreach (string key in AddressablesData.BundleKeys!.Keys)
         {
+            if (!AddressablesData.TryGetLocation(key, out IResourceLocation? location))
+            {
+                continue;
+            }
+
             if (location.ResourceType != typeof(IAssetBundleResource))
             {
                 continue;

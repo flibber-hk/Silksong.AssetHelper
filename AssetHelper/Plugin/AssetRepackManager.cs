@@ -53,7 +53,7 @@ internal static class AssetRepackManager
                 yield return null;
             }
 
-            IEnumerator catalogCreate = CreateCatalog(_repackData);
+            IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData);
             while (catalogCreate.MoveNext())
             {
                 yield return null;
@@ -65,7 +65,7 @@ internal static class AssetRepackManager
         if (_repackData.Any())
         {
             // Only load the catalog if anyone's requested scene assets
-            AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(Path.Combine(AssetPaths.CatalogFolder, $"{CatalogKeys.SceneCatalogId}.bin"));
+            AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(SceneCatalogPath);
             yield return catalogLoadOp;
             AssetRequestAPI.SceneAssetLocator = catalogLoadOp.Result;
         }
@@ -77,10 +77,19 @@ internal static class AssetRepackManager
     }
     #endregion
 
+    // Invalidate all data on disk that's older than this version
     private static readonly Version _lastAcceptablePluginVersion = Version.Parse("0.1.0");
+
+    // Path to the metadata for the repacked scene bundles
     private static string _repackDataPath = Path.Combine(AssetPaths.RepackedSceneBundleDir, "repack_data.json");
 
+    // Path to the scene catalog .bin file
+    private static string SceneCatalogPath => Path.Combine(AssetPaths.CatalogFolder, $"{CatalogKeys.SceneCatalogId}.bin");
+
+    // (scene, gameObjs) that need to be repacked
     private static Dictionary<string, HashSet<string>> _toRepack = [];
+
+    // Data about the repacked assets in the bundles on disk
     private static RepackDataCollection _repackData = [];
 
     /// <summary>
@@ -205,8 +214,11 @@ internal static class AssetRepackManager
         }
     }
 
-    internal static IEnumerator CreateCatalog(RepackDataCollection data)
+    internal static IEnumerator CreateSceneAssetCatalog(RepackDataCollection data)
     {
+        // TODO - check metadata, this should include all game objects
+        string catalogMetadataPath = Path.ChangeExtension(SceneCatalogPath, ".json");
+
         AssetHelperPlugin.InstanceLogger.LogInfo($"Creating catalog");
         CustomCatalogBuilder cbr = new(CatalogKeys.SceneCatalogId);
         foreach ((string sceneName, RepackedSceneBundleData repackBunData) in data)
@@ -220,6 +232,11 @@ internal static class AssetRepackManager
 
         yield return null;
 
-        string catalogPath = cbr.Build();
+        cbr.Build();
+
+        CatalogMetadata metadata = new();
+        metadata.SerializeToFile(catalogMetadataPath);
+
+        yield return null;
     }
 }
