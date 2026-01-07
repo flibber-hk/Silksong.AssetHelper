@@ -72,5 +72,5 @@ public static class AssetRequestAPI
         }
     }
 
-    // TODO - asset retrieval
+    // TODO - non scene assets
 }

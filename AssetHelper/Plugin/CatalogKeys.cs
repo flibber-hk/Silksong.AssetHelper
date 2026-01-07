@@ -23,4 +23,5 @@ public static class CatalogKeys
         return $"{SceneCatalogId}/Assets/{sceneName.ToLowerInvariant()}/{objPath}";
     }
 
+    // TODO - function to return a wrapped asset
 }
