@@ -5,6 +5,7 @@ using Silksong.AssetHelper.BundleTools.Repacking;
 using Silksong.AssetHelper.CatalogTools;
 using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.LoadedAssets;
+using Silksong.AssetHelper.Plugin;
 using Silksong.UnityHelper.Extensions;
 using System;
 using System.Collections;
@@ -27,6 +28,17 @@ namespace Silksong.AssetHelper;
 internal static class TestExecutor
 {
     public static int Completed { get;private set; }
+
+    public static void GenViaApi()
+    {
+        if (JsonExtensions.TryLoadFromFile(
+            Path.Combine(AssetPaths.AssemblyFolder, "serialization_data.json"),
+            out Dictionary<string, List<string>>? data))
+        {
+            AssetRequestAPI.RequestSceneAssets(data);
+        }
+
+    }
 
     public static void GenFromFile()
     {
