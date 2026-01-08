@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using UnityEngine;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
@@ -86,6 +87,65 @@ internal static class CatalogEntryUtils
             assetType,
             internalId,
             "UnityEngine.ResourceManagement.ResourceProviders.BundledAssetProvider",
+            new object[] { primaryKey },
+            deps,
+            null
+            );
+    }
+
+    /// <summary>
+    /// Create a catalog entry representing a child gameobject of
+    /// the gameObject loaded by parentPrimaryKey.
+    /// </summary>
+    /// <param name="parentPrimaryKey">The primary key of the parent.</param>
+    /// <param name="relativePath">The path of the child relative to the parent, with no leading slash.</param>
+    /// <param name="primaryKey">The primary key of the added entry.</param>
+    public static ContentCatalogDataEntry CreateChildGameObjectEntry(
+    string parentPrimaryKey,
+        string relativePath,
+        out string primaryKey
+        )
+    {
+        
+        int lastDot = parentPrimaryKey.LastIndexOf('.');
+        int lastSlash = parentPrimaryKey.LastIndexOf('/');
+
+        // Normal case for AssetHelper, path is of the form {stuff}.prefab
+        if (lastDot != -1 && lastDot > lastSlash)
+        {
+            string mainId = parentPrimaryKey.Substring(0, lastDot);
+            string suffix = parentPrimaryKey.Substring(lastDot);
+            primaryKey = $"{mainId}/{relativePath}{suffix}";
+        }
+
+        // This would be weird but we should avoid double slash
+        else if (parentPrimaryKey.EndsWith('/'))
+        {
+            primaryKey = $"{parentPrimaryKey}{relativePath}";
+        }
+
+        else
+        {
+            primaryKey = $"{parentPrimaryKey}/{relativePath}";
+        }
+
+        return CreateChildGameObjectEntry(parentPrimaryKey, relativePath, primaryKey);
+    }
+
+    /// <inheritdoc cref="CreateChildGameObjectEntry(string, string, out string)" />
+    public static ContentCatalogDataEntry CreateChildGameObjectEntry(
+        string parentPrimaryKey,
+        string relativePath,
+        string primaryKey
+        )
+    {
+        object[] deps = new object[] { parentPrimaryKey };
+
+        return new ContentCatalogDataEntry(
+            typeof(GameObject),
+            // Put the parent primary key to ensure the internal ID is unique
+            $"{relativePath}/{ChildGameObjectProvider.InternalIdSeparator}/{parentPrimaryKey}",
+            ChildGameObjectProvider.ClassProviderId,
             new object[] { primaryKey },
             deps,
             null
