@@ -113,6 +113,8 @@ internal class CustomCatalogBuilder
         }
     }
 
+    public void AddCatalogEntry(ContentCatalogDataEntry entry) => _addedEntries.Add(entry);
+
     // TODO - this should produce information about the catalog
     public string Build(string? catalogId = null)
     {

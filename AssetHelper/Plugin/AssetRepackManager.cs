@@ -1,7 +1,9 @@
 ﻿using MonoDetour.HookGen;
 using Silksong.AssetHelper.BundleTools;
 using Silksong.AssetHelper.BundleTools.Repacking;
+using Silksong.AssetHelper.CatalogTools;
 using Silksong.AssetHelper.Internal;
+using Silksong.AssetHelper.Util;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -51,17 +53,17 @@ internal static class AssetRepackManager
                 // Yield after each repack op is done
                 yield return null;
             }
+        }
 
-            IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData);
-            while (catalogCreate.MoveNext())
-            {
-                yield return null;
-            }
-
+        IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData);
+        while (catalogCreate.MoveNext())
+        {
             yield return null;
         }
 
-        if (_repackData.Any())
+        yield return null;
+
+        if (_repackData.Count > 0)
         {
             // Only load the catalog if anyone's requested scene assets
             AssetHelperPlugin.InstanceLogger.LogInfo($"Loading scene catalog");
@@ -78,7 +80,7 @@ internal static class AssetRepackManager
         }
         yield return null;
 
-        if (File.Exists(NonSceneCatalogPath) && AssetRequestAPI.AnyNonSceneCatalogRequested)
+        if (File.Exists(NonSceneCatalogPath) && AssetRequestAPI.RequestedNonSceneAssets.Count > 0)
         {
             AssetHelperPlugin.InstanceLogger.LogInfo($"Loading non-scene catalog");
             AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(NonSceneCatalogPath);
@@ -142,6 +144,9 @@ internal static class AssetRepackManager
                 _toRepack[scene] = request;
                 continue;
             }
+
+            // TODO - Verify that the bundle exists
+            // People might delete the existing bundle so we may have to re-repack in that case
 
             if (request.All(x => existingBundleData.Data.TriedToRepack(x)))
             {
@@ -244,9 +249,35 @@ internal static class AssetRepackManager
             if (repackBunData.Data == null) continue;
             string bundlePath = Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{sceneName}.bundle");
             cbr.AddRepackedSceneData(sceneName, repackBunData.Data, bundlePath);
-        }
 
-        // TODO - add in requested child paths
+            // Add in requested child paths
+            if (AssetRequestAPI.SceneAssetRequest.TryGetValue(sceneName, out HashSet<string> requested))
+            {
+                foreach (string child in requested)
+                {
+                    if (!ObjPathUtil.TryFindAncestor(
+                        repackBunData.Data.GameObjectAssets?.Values.ToList(),
+                        child,
+                        out string? ancestorPath,
+                        out string? relativePath
+                        ))
+                    {
+                        AssetHelperPlugin.InstanceLogger.LogWarning($"Failed to find {child} in bundle for {sceneName} as loadable");
+                        continue;
+                    }
+                    if (string.IsNullOrEmpty(relativePath))
+                    {
+                        // Directly in bundle so no need to include as child
+                        continue;
+                    }
+
+                    string parentKey = CatalogKeys.GetKeyForSceneAsset(sceneName, ancestorPath);
+                    string childKey = CatalogKeys.GetKeyForSceneAsset(sceneName, child);
+                    ContentCatalogDataEntry entry = CatalogEntryUtils.CreateChildGameObjectEntry(parentKey, relativePath, childKey);
+                    cbr.AddCatalogEntry(entry);
+                }
+            }
+        }
 
         yield return null;
 

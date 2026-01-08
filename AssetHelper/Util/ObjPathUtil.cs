@@ -87,7 +87,7 @@ public static class ObjPathUtil
     /// <param name="ancestorPath">The path representing the ancestor.</param>
     /// <param name="relativePath">The path relative to the ancestor. This will be null if the ancestor is equal to the object.</param>
     /// <returns>False if the supplied game object has no ancestor in the collection.</returns>
-    public static bool TryFindAncestor(List<string> paths, string objName, [MaybeNullWhen(false)] out string ancestorPath, out string? relativePath)
+    public static bool TryFindAncestor(List<string>? paths, string objName, [MaybeNullWhen(false)] out string ancestorPath, out string? relativePath)
     {
         foreach (string path in paths ?? Enumerable.Empty<string>())
         {

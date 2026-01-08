@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using UnityEngine.AddressableAssets.ResourceLocators;
 
 namespace Silksong.AssetHelper.Plugin;
@@ -12,6 +13,14 @@ namespace Silksong.AssetHelper.Plugin;
 public static class AssetRequestAPI
 {
     internal static bool RequestApiAvailable { get; set; } = true;
+
+    private static void VerifyRequest([CallerMemberName] string? caller = null)
+    {
+        if (!RequestApiAvailable)
+        {
+            throw new InvalidOperationException($"Requests made through {caller} should be made during a plugin's Awake method!");
+        }
+    }
 
     internal static DelayedAction AfterBundleCreationComplete = new();
 
@@ -39,10 +48,7 @@ public static class AssetRequestAPI
     /// <param name="assetPaths">A list of asset paths to be repacked. They should be given in the hierarchy.</param>
     public static void RequestSceneAssets(string sceneName, IEnumerable<string> assetPaths)
     {
-        if (!RequestApiAvailable)
-        {
-            throw new InvalidOperationException($"Scene asset requests must be made during a plugin's Awake method! Scene {sceneName}");
-        }
+        VerifyRequest();
 
         sceneName = sceneName.ToLowerInvariant();
 
@@ -86,15 +92,18 @@ public static class AssetRequestAPI
 
     internal static Dictionary<(string bundleName, string assetName), Type> RequestedNonSceneAssets { get; } = [];
 
-    internal static bool AnyNonSceneCatalogRequested => FullNonSceneCatalogRequested || RequestedNonSceneAssets.Count > 0;
-
     /// <summary>
     /// Request the full catalog of non-scene assets to be created.
     /// 
     /// Generating the full catalog is significantly slower than generating a catalog for specific assets,
     /// so using <see cref="RequestNonSceneAsset{T}(string, string)"/> is generally preferred.
     /// </summary>
-    public static void RequestFullNonSceneCatalog() => FullNonSceneCatalogRequested = true;
+    [Obsolete("This is currently not implemented, instead please request non-scene assets individually.")]
+    public static void RequestFullNonSceneCatalog()
+    {
+        VerifyRequest();
+        FullNonSceneCatalogRequested = true;
+    }
 
     /// <summary>
     /// Request that the given asset is made available via Addressables.
@@ -105,6 +114,8 @@ public static class AssetRequestAPI
     /// <param name="assetName">The name of the asset within the bundle container.</param>
     public static void RequestNonSceneAsset<T>(string bundleName, string assetName) where T : UObject
     {
+        VerifyRequest();
+
         bundleName = bundleName.ToLowerInvariant();
         if (bundleName.EndsWith(".bundle"))
         {

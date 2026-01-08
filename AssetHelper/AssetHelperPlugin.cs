@@ -1,16 +1,11 @@
-using AssetsTools.NET;
-using AssetsTools.NET.Extra;
 using BepInEx;
 using BepInEx.Logging;
-using MonoMod.Cil;
-using MonoMod.RuntimeDetour;
 using Silksong.AssetHelper.BundleTools;
+using Silksong.AssetHelper.CatalogTools;
 using Silksong.AssetHelper.Plugin;
-using System;
-using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
+using UnityEngine.AddressableAssets;
 
 namespace Silksong.AssetHelper;
 
@@ -31,12 +26,10 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         InstanceLogger = this.Logger;
 
         AssetsToolsPatch.Init();
-
         BundleDeps.Setup();
-
         GameEvents.Hook();
-
         AssetRepackManager.Hook();
+        Addressables.ResourceManager.ResourceProviders.Add(new ChildGameObjectProvider());
 
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
     }
