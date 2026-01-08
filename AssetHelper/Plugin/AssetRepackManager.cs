@@ -270,7 +270,7 @@ internal static class AssetRepackManager
             (int)AssetClassID.AnimationClip => typeof(AnimationClip),
             (int)AssetClassID.AudioClip => typeof(AudioClip),
             (int)AssetClassID.AnimatorOverrideController => typeof(AnimatorOverrideController),
-            (int)AssetClassID.MonoBehaviour => typeof(MonoBehaviour),
+            (int)AssetClassID.MonoBehaviour => typeof(UObject),  // TODO - figure out mbr types, mbr is also used for ScriptableObject
             (int)AssetClassID.SpriteAtlas => typeof(SpriteAtlas),
             (int)AssetClassID.GameObject => typeof(GameObject),
             (int)AssetClassID.Material => typeof(Material),
