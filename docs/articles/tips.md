@@ -45,6 +45,27 @@ in the bundle, but during the Awake method of one of its child components it set
 parent to null. AssetHelper needs to know the path of the game object in the bundle,
 not the path at runtime!
 
+* Prefer non-scene assets
+Most assets are either only available in scenes or only available in non-scene bundles.
+However, there are a few assets which are available in both forms. For example, to load
+a Roachcatcher, you can load it with one of the following two ways:
+* A non-scene asset called `Assets/Prefabs/Hornet Enemies/Roachfeeder Short.prefab` in
+the `localpoolprefabs_assets_areadust` bundle
+* A scene asset called `Roachfeeder Short` in scenes such as Dust_02
+
+It is *always* more efficient to load the non-scene asset, where possible.
+
+* Prefer loading from fewer/smaller bundles
+It's hard to predict exactly how long it will take to repack a scene bundle
+but bundles that take up more space on disk are more likely to take longer
+to repack. For example, the coral_23.bundle file is significantly larger
+than the coral_44.bundle file so if you just need one asset that
+is in both bundles it is better to choose coral_44.
+
+That said, it is also faster to load fewer bundles, so given the choice
+between two separate bundles or one bundle for two objects it is typically
+better to choose the latter.
+
 ## Testing checklist
 
 It is not necessary to check everything on the following list, but there are several
