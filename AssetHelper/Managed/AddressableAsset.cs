@@ -78,4 +78,14 @@ public class AddressableAsset<T>(string Key)
             Handle = null;
         }
     }
+
+    /// <summary>
+    /// Whether or not the asset has finished loading.
+    /// </summary>
+    public bool IsLoaded => Handle.HasValue && Handle.Value.IsDone;
+
+    /// <summary>
+    /// Whether or not the asset load request has been made.
+    /// </summary>
+    public bool HasBeenLoaded => Handle.HasValue;
 }
