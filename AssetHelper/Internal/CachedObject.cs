@@ -63,7 +63,7 @@ internal class CachedObject<T> where T : class
         {
             if (fromCache.Value is not null && fromCache.IsValid())
             {
-                GameEvents.OnQuitApplication += () => fromCache.SerializeToFile(filePath);
+                AssetHelperPlugin.OnQuitApplication += () => fromCache.SerializeToFile(filePath);
                 return fromCache;
             }
         }
@@ -74,7 +74,7 @@ internal class CachedObject<T> where T : class
             PluginVersion = AssetHelperPlugin.Version,
             Value = createDefault()
         };
-        GameEvents.OnQuitApplication += () => created.SerializeToFile(filePath);
+        AssetHelperPlugin.OnQuitApplication += () => created.SerializeToFile(filePath);
         return created;
     }
 }

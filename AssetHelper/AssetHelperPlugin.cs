@@ -2,9 +2,10 @@ using BepInEx;
 using BepInEx.Logging;
 using Silksong.AssetHelper.BundleTools;
 using Silksong.AssetHelper.CatalogTools;
+using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.Plugin;
+using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine.AddressableAssets;
 
 namespace Silksong.AssetHelper;
@@ -14,11 +15,15 @@ namespace Silksong.AssetHelper;
 public partial class AssetHelperPlugin : BaseUnityPlugin
 {
     public static AssetHelperPlugin Instance { get; private set; }
-    #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+
+    /// <summary>
+    /// Event raised when quitting the application.
+    /// </summary>
+    public static event Action? OnQuitApplication;
+
 
     internal static ManualLogSource InstanceLogger { get; private set; }
-
-    private static readonly Dictionary<string, string> Keys = [];
 
     private void Awake()
     {
@@ -27,7 +32,6 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
         AssetsToolsPatch.Init();
         BundleDeps.Setup();
-        GameEvents.Hook();
         AssetRepackManager.Hook();
         Addressables.ResourceManager.ResourceProviders.Add(new ChildGameObjectProvider());
 
@@ -56,6 +60,9 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
 
     private void OnApplicationQuit()
     {
-        GameEvents.AfterQuitApplication();
+        foreach (Action a in OnQuitApplication?.GetInvocationList() ?? Array.Empty<Action>())
+        {
+            ActionUtil.SafeInvoke(a);
+        }
     }
 }
