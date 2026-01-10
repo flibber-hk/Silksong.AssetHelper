@@ -1,10 +1,9 @@
 ﻿using System.Reflection;
 
-namespace Silksong.AssetHelper.Core;
+namespace Silksong.AssetHelper.Internal;
 
 internal static class VersionData
 {
-    #region Silksong Version
     /// <summary>
     /// The Silksong version. This is calculated using reflection to avoid it being inlined.
     /// </summary>
@@ -24,7 +23,4 @@ internal static class VersionData
         ?.GetRawConstantValue()
         as string
         ?? "UNKNOWN";
-    #endregion
-
-
 }
