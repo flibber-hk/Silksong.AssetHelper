@@ -42,9 +42,6 @@ internal class NonSceneCatalog
 
     private IEnumerator CreateNonSceneAssetCatalog()
     {
-        // TODO - implement full non scene catalog option
-        // TODO - probably easiest to implement as a separate catalog
-
         string catalogMetadataPath = Path.ChangeExtension(NonSceneCatalogPath, ".json");
 
         AssetHelperPlugin.InstanceLogger.LogInfo($"Creating NS catalog");

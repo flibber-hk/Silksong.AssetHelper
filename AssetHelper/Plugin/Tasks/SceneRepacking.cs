@@ -51,7 +51,6 @@ internal class SceneRepacking
             yield return null;
         }
 
-        // If no repacking was done, don't 
         IEnumerator catalogCreate = CreateSceneAssetCatalog(_repackData);
         while (catalogCreate.MoveNext())
         {
@@ -60,16 +59,15 @@ internal class SceneRepacking
 
         yield return null;
 
+        // Only load the catalog if anyone's requested scene assets
         if (_repackData.Count > 0)
         {
-            // Only load the catalog if anyone's requested scene assets
             AssetHelperPlugin.InstanceLogger.LogInfo($"Loading scene catalog");
             AsyncOperationHandle<IResourceLocator> catalogLoadOp = Addressables.LoadContentCatalogAsync(SceneCatalogPath);
             yield return catalogLoadOp;
             AssetRequestAPI.SceneAssetLocator = catalogLoadOp.Result;
         }
         yield return null;
-
     }
 
     private IEnumerator PrepareAndRun()
