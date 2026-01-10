@@ -15,7 +15,7 @@ using AssetsTools.NET.Extra;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
-namespace Silksong.AssetHelper.BundleTools;
+namespace Silksong.AssetHelper;
 
 /// <summary>
 /// Class providing tools to help find information about the asset database.
@@ -127,7 +127,7 @@ public static class DebugTools
     private class LocatorInfo
     {
         public string? LocatorID { get; init; }
-        public List<AddressablesAssetInfo>? Infos { get; init; }
+        public List<AddressablesAssetInfo> Infos { get; init; } = [];
     }
 
     private class AddressablesAssetInfo
@@ -207,6 +207,23 @@ public static class DebugTools
 
         return new(names, unknown);
     }
+
+    /// <summary>
+    /// Class encapsulating the names of loaded asset bundles.
+    /// </summary>
+    public class LoadedBundleNames(List<string> names, List<string> unknown)
+    {
+        /// <summary>
+        /// Names given as paths relative to the bundle base dir.
+        /// </summary>
+        public List<string> Names = names;
+
+        /// <summary>
+        /// Names of bundles that could not be found in the bundle base dir (e.g. modded bundles).
+        /// </summary>
+        public List<string> Unknown = unknown;
+    }
+
 
     /// <summary>
     /// Dump all game object paths to paths_{sceneName}.json in the debug data dir.

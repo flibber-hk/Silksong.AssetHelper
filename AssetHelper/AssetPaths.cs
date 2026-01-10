@@ -1,5 +1,4 @@
 ﻿using BepInEx;
-using Silksong.AssetHelper.BundleTools;
 using System.IO;
 using System.Reflection;
 using UnityEngine;
@@ -37,11 +36,6 @@ public static class AssetPaths
             return Path.Combine(rootFolder, "aa", osFolder);
         }
     }
-
-    /// <summary>
-    /// Path to the AssetHelper catalog folder.
-    /// </summary>
-    public static string CatalogFolder => Path.Combine(CacheDirectory, "Catalogs").CreateIfNeeded();
 
     /// <summary>
     /// Get the path to the base game scene bundle for a given scene.
@@ -89,6 +83,11 @@ public static class AssetPaths
     /// Directory storing repacked scenes.
     /// </summary>
     internal static string RepackedSceneBundleDir => Path.Combine(CacheDirectory, "repacked_scenes").CreateIfNeeded();
+
+    /// <summary>
+    /// Path to the AssetHelper catalog folder.
+    /// </summary>
+    internal static string CatalogFolder => Path.Combine(CacheDirectory, "Catalogs").CreateIfNeeded();
 
     /// <summary>
     /// Directory containing this assembly.

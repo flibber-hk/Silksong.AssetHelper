@@ -1,5 +1,4 @@
-﻿using Silksong.AssetHelper.BundleTools;
-using Silksong.AssetHelper.CatalogTools;
+﻿using Silksong.AssetHelper.CatalogTools;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -8,6 +7,7 @@ using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using AssetHelperLib.BundleTools;
+using Silksong.AssetHelper.Internal;
 
 namespace Silksong.AssetHelper.Plugin;
 

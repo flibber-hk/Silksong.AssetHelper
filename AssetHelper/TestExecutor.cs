@@ -2,7 +2,6 @@
 using AssetsTools.NET.Extra;
 using AssetHelperLib.BundleTools;
 using AssetHelperLib.BundleTools.Repacking;
-using Silksong.AssetHelper.BundleTools;
 using Silksong.AssetHelper.CatalogTools;
 using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.Plugin;
