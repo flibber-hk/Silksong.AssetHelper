@@ -175,6 +175,9 @@ internal class SceneRepacking
     private IEnumerator Run()
     {
         SceneRepacker repacker = new StrippedSceneRepacker();
+        LoadingBar bar = LoadingBar.Create();
+        int total = _toRepack.Count;
+        int count = 0;
 
         AssetHelperPlugin.InstanceLogger.LogInfo($"Repacking {_toRepack.Count} scenes");
         foreach ((string scene, HashSet<string> request) in _toRepack)
@@ -205,8 +208,13 @@ internal class SceneRepacking
             _repackData.SerializeToFile(_repackDataPath);
             AssetHelperPlugin.InstanceLogger.LogInfo($"Repacked {scene} in {sw.ElapsedMilliseconds} ms");
 
+            count++;
+            bar.SetProgress((float)count / (float)total);
+
             yield return null;
         }
+
+        UObject.Destroy(bar.gameObject);
     }
 
     private IEnumerator CreateSceneAssetCatalog(RepackDataCollection data)

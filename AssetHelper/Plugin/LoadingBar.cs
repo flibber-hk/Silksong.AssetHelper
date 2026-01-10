@@ -1,0 +1,96 @@
+﻿using UnityEngine;
+using UnityEngine.UI;
+
+internal class LoadingBar : MonoBehaviour
+{
+    private RectTransform _fillImageRect;
+    private GameObject _canvasObject;
+    private CanvasGroup _canvasGroup;
+
+    public static LoadingBar Create()
+    {
+        GameObject go = new("AssetHelper LoadingBar");
+        LoadingBar ret = go.AddComponent<LoadingBar>();
+        go.SetActive(true);
+        return ret;
+    }
+
+    void Awake()
+    {
+        _canvasObject = new("LoadingCanvas");
+        Canvas canvas = _canvasObject.AddComponent<Canvas>();
+        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+        canvas.sortingOrder = 999;
+
+        _canvasObject.AddComponent<CanvasScaler>();
+        _canvasObject.AddComponent<GraphicRaycaster>();
+        _canvasGroup = _canvasObject.AddComponent<CanvasGroup>();
+        _canvasGroup.interactable = false;
+        _canvasGroup.blocksRaycasts = true;
+
+        GameObject bgObj = new("Background");
+        bgObj.transform.SetParent(_canvasObject.transform);
+        Image bgImage = bgObj.AddComponent<Image>();
+        bgImage.color = Color.black;
+
+        RectTransform bgRect = bgImage.rectTransform;
+        bgRect.anchorMin = Vector2.zero;
+        bgRect.anchorMax = Vector2.one;
+        bgRect.sizeDelta = Vector2.zero;
+        bgRect.anchoredPosition = Vector2.zero;
+
+        GameObject borderObj = new("Outline");
+        borderObj.transform.SetParent(_canvasObject.transform);
+        Image borderImage = borderObj.AddComponent<Image>();
+        borderImage.color = Color.white;
+
+        RectTransform borderRect = borderImage.rectTransform;
+        borderRect.anchorMin = new Vector2(0.5f, 0.5f);
+        borderRect.anchorMax = new Vector2(0.5f, 0.5f);
+        borderRect.pivot = new Vector2(0.5f, 0.5f);
+        borderRect.sizeDelta = new Vector2(500, 66);
+        borderRect.anchoredPosition = Vector2.zero;
+
+        GameObject innerBgObj = new("InnerBG");
+        innerBgObj.transform.SetParent(borderObj.transform);
+        Image innerBgImage = innerBgObj.AddComponent<Image>();
+        innerBgImage.color = Color.black;
+
+        RectTransform innerBgRect = innerBgImage.rectTransform;
+        innerBgRect.anchorMin = Vector2.zero;
+        innerBgRect.anchorMax = Vector2.one;
+        innerBgRect.sizeDelta = new Vector2(-4, -4);
+        innerBgRect.anchoredPosition = Vector2.zero;
+
+        GameObject fillObj = new("Fill");
+        fillObj.transform.SetParent(innerBgObj.transform);
+        Image fillImage = fillObj.AddComponent<Image>();
+        fillImage.color = Color.white;
+
+        _fillImageRect = fillImage.rectTransform;
+        _fillImageRect.anchorMin = new Vector2(0, 0);
+        _fillImageRect.anchorMax = new Vector2(0, 1);
+        _fillImageRect.pivot = new Vector2(0, 0.5f);
+        _fillImageRect.sizeDelta = Vector2.zero;
+        _fillImageRect.anchoredPosition = Vector2.zero;
+    }
+
+    public void SetProgress(float progress)
+    {
+        progress = Mathf.Clamp01(progress);
+        _fillImageRect.anchorMax = new Vector2(progress, 1f);
+    }
+
+    public void SetVisible(bool visible)
+    {
+        _canvasGroup.alpha = visible ? 1f : 0f;
+    }
+
+    private void OnDestroy()
+    {
+        if (_canvasObject != null)
+        {
+            Destroy(_canvasObject);
+        }
+    }
+}
