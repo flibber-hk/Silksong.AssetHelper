@@ -12,7 +12,7 @@ using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 
-namespace Silksong.AssetHelper;
+namespace Silksong.AssetHelper.Core;
 
 /// <summary>
 /// Class managing data about the bundles Addressables database.

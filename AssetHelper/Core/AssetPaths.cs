@@ -3,7 +3,7 @@ using System.IO;
 using System.Reflection;
 using UnityEngine;
 
-namespace Silksong.AssetHelper;
+namespace Silksong.AssetHelper.Core;
 
 /// <summary>
 /// Static class defining paths used by AssetHelper.

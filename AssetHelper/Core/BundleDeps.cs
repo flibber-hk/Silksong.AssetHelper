@@ -1,14 +1,15 @@
 ﻿using AssetsTools.NET;
 using AssetsTools.NET.Extra;
+using Silksong.AssetHelper.Internal;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Silksong.AssetHelper.Internal;
+namespace Silksong.AssetHelper.Core;
 
 /// <summary>
 /// Helpers for determining bundle dependencies, with the results automatically cached.
 /// </summary>
-internal static class BundleDeps
+public static class BundleDeps
 {
     internal static void Setup()
     {

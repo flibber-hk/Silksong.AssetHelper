@@ -15,7 +15,7 @@ using AssetsTools.NET.Extra;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
-namespace Silksong.AssetHelper;
+namespace Silksong.AssetHelper.Core;
 
 /// <summary>
 /// Class providing tools to help find information about the asset database.

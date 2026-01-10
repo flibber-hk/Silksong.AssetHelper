@@ -1,6 +1,7 @@
 using BepInEx;
 using BepInEx.Logging;
 using Silksong.AssetHelper.CatalogTools;
+using Silksong.AssetHelper.Core;
 using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.Plugin;
 using System;

@@ -1,4 +1,5 @@
 ﻿using AssetHelperLib.BundleTools;
+using Silksong.AssetHelper.Core;
 
 namespace Silksong.AssetHelper.Plugin;
 

@@ -7,7 +7,7 @@ using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using AssetHelperLib.BundleTools;
-using Silksong.AssetHelper.Internal;
+using Silksong.AssetHelper.Core;
 
 namespace Silksong.AssetHelper.Plugin;
 

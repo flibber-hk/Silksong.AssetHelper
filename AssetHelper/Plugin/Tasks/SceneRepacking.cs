@@ -15,6 +15,7 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using RepackDataCollection = System.Collections.Generic.Dictionary<string, Silksong.AssetHelper.Plugin.RepackedSceneBundleData>;
+using Silksong.AssetHelper.Core;
 
 namespace Silksong.AssetHelper.Plugin.Tasks;
 

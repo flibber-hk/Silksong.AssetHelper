@@ -1,4 +1,5 @@
-﻿using Silksong.AssetHelper.Internal;
+﻿using Silksong.AssetHelper.Core;
+using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;

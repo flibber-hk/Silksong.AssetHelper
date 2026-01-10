@@ -16,6 +16,7 @@ using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
+using Silksong.AssetHelper.Core;
 
 namespace Silksong.AssetHelper;
 
