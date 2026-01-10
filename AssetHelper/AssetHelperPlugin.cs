@@ -29,12 +29,21 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         Instance = this;
         InstanceLogger = this.Logger;
 
+        InitLibLogging();
         AssetsToolsPatch.Init();
         BundleDeps.Setup();
         AssetRepackManager.Hook();
         Addressables.ResourceManager.ResourceProviders.Add(new ChildGameObjectProvider());
 
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");
+    }
+
+    private static void InitLibLogging()
+    {
+        ManualLogSource ahlLog = BepInEx.Logging.Logger.CreateLogSource("AssetHelper.Lib");
+        AssetHelperLib.Logging.OnLog += ahlLog.LogInfo;
+        AssetHelperLib.Logging.OnLogWarning += ahlLog.LogWarning;
+        AssetHelperLib.Logging.OnLogError += ahlLog.LogError;
     }
 
     private IEnumerator Start()

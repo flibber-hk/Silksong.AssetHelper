@@ -56,6 +56,7 @@
   
   <ItemGroup>
     <PackageReference Include="AssetsTools.NET" Version="3.0.3" GeneratePathProperty="true" PrivateAssets="all" />
+    <PackageReference Include="AssetHelperLib" Version="0.9.3" GeneratePathProperty="true"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -80,6 +81,8 @@
       <Binaries Include="$(TargetDir)/$(TargetName).xml" LocalDir="/" PackDir="/" />
       <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.dll" />
       <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.xml" />
+      <Binaries Include="$(PkgAssetHelperLib)/lib/netstandard2.1/AssetHelperLib.dll" />
+      <Binaries Include="$(PkgAssetHelperLib)/lib/netstandard2.1/AssetHelperLib.xml" />
     </ItemGroup>
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/../thunderstore</ThunderstoreDir>

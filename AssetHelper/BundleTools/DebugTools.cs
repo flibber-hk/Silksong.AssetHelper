@@ -1,4 +1,5 @@
-﻿using BepInEx.Logging;
+﻿using AssetHelperLib.BundleTools;
+using BepInEx.Logging;
 using Silksong.AssetHelper.Internal;
 using System;
 using System.Collections.Generic;
