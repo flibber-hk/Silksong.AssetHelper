@@ -106,7 +106,9 @@ internal class SceneRepacking : BaseStartupTask
         }
 
         // Any data with a metadata mismatch should be removed from the dictionary
-        _repackData = _repackData.Where(kvp => !MetadataMismatch(kvp.Key, kvp.Value)).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        _repackData = _repackData
+            .Where(kvp => !MetadataMismatch(kvp.Key, kvp.Value) && File.Exists(GetBundlePathForScene(kvp.Key)))
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
         _toRepack = [];
 
@@ -123,9 +125,6 @@ internal class SceneRepacking : BaseStartupTask
                 continue;
             }
 
-            // TODO - Verify that the bundle exists
-            // People might delete the existing bundle so we may have to re-repack in that case
-
             if (request.All(x => existingBundleData.Data.TriedToRepack(x)))
             {
                 // No need to re-repack as there's nothing new to try
@@ -139,6 +138,11 @@ internal class SceneRepacking : BaseStartupTask
                 // .Union(existingBundleData.Data.NonRepackedAssets ?? Enumerable.Empty<string>())
                 );
         }
+    }
+
+    private static string GetBundlePathForScene(string sceneName)
+    {
+        return Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{sceneName}.bundle");
     }
 
     /// <summary>
@@ -193,7 +197,7 @@ internal class SceneRepacking : BaseStartupTask
                 AssetPaths.GetScenePath(scene),
                 request.ToList(),
                 $"{nameof(AssetHelper)}/{scene}",
-                Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{scene}.bundle")
+                GetBundlePathForScene(scene)
                 );
 
             string? hash = null;
@@ -243,7 +247,7 @@ internal class SceneRepacking : BaseStartupTask
         foreach ((string sceneName, RepackedSceneBundleData repackBunData) in data)
         {
             if (repackBunData.Data == null) continue;
-            string bundlePath = Path.Combine(AssetPaths.RepackedSceneBundleDir, $"repacked_{sceneName}.bundle");
+            string bundlePath = GetBundlePathForScene(sceneName);
             cbr.AddRepackedSceneData(sceneName, repackBunData.Data, bundlePath);
 
             // Add in requested child paths
