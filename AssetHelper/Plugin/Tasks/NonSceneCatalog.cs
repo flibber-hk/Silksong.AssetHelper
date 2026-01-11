@@ -15,9 +15,6 @@ namespace Silksong.AssetHelper.Plugin.Tasks;
 /// </summary>
 internal class NonSceneCatalog : BaseStartupTask
 {
-    // Invalidate all data on disk that's older than this version
-    private static readonly Version _lastAcceptablePluginVersion = Version.Parse("0.1.0");
-
     // Path to the non-scene catalog .bin file
     private static string NonSceneCatalogPath => Path.Combine(AssetPaths.CatalogFolder, $"{CatalogKeys.NonSceneCatalogId}.bin");
 
@@ -58,9 +55,7 @@ internal class NonSceneCatalog : BaseStartupTask
 
         if (JsonExtensions.TryLoadFromFile(catalogMetadataPath, out NonSceneCatalogMetadata? existingCatalogData)
             && existingCatalogData.SilksongVersion == VersionData.SilksongVersion
-            && Version.TryParse(existingCatalogData.PluginVersion ?? string.Empty, out Version oldPluginVersion)
-            && oldPluginVersion <= Version.Parse(AssetHelperPlugin.Version)
-            && oldPluginVersion >= _lastAcceptablePluginVersion)
+            && VersionData.EarliestAcceptableNonSceneCatalogVersion.AllowCachedData(existingCatalogData.PluginVersion))
         {
             toCatalog = existingCatalogData.CatalogAssets;
         }

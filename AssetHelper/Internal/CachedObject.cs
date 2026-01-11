@@ -12,12 +12,6 @@ namespace Silksong.AssetHelper.Internal;
 /// </summary>
 internal class CachedObject<T> where T : class
 {
-    /// <summary>
-    /// The last acceptable version for cached data. When making a change that impacts cached data,
-    /// this number should be increased.
-    /// </summary>
-    private static readonly Version _lastAcceptablePluginVersion = Version.Parse("0.1.0");
-
     private CachedObject() { }
         
     [JsonProperty] public required string SilksongVersion { get; init; }
@@ -36,18 +30,7 @@ internal class CachedObject<T> where T : class
             return false;
         }
 
-        Version current = Version.Parse(AssetHelperPlugin.Version);
-        Version fromCache = Version.Parse(PluginVersion);
-        if (fromCache > current)
-        {
-            return false;
-        }
-        if (fromCache < _lastAcceptablePluginVersion)
-        {
-            return false;
-        }
-        // Automatically regenerate cache on major version change
-        if (fromCache.Major != current.Major)
+        if (!VersionData.EarliestAcceptableGeneralVersion.AllowCachedData(this.PluginVersion))
         {
             return false;
         }

@@ -24,9 +24,6 @@ namespace Silksong.AssetHelper.Plugin.Tasks;
 /// </summary>
 internal class SceneRepacking : BaseStartupTask
 {
-    // Invalidate all data on disk that's older than this version
-    private static readonly Version _lastAcceptablePluginVersion = Version.Parse("0.1.0");
-
     // Path to the metadata for the repacked scene bundles
     private static string _repackDataPath = Path.Combine(AssetPaths.RepackedSceneBundleDir, "repack_data.json");
 
@@ -154,9 +151,7 @@ internal class SceneRepacking : BaseStartupTask
     /// </summary>
     private static bool MetadataMismatch(string scene, RepackedSceneBundleData existingData)
     {
-        if (!Version.TryParse(existingData.PluginVersion ?? string.Empty, out Version oldPluginVersion)
-                || oldPluginVersion > Version.Parse(AssetHelperPlugin.Version)
-                || oldPluginVersion < _lastAcceptablePluginVersion)
+        if (!VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(existingData.PluginVersion))
         {
             // Mismatch: the version of the plugin used to repack needs to be after the last acceptable version.
             // We do not accept versions from the future.
@@ -237,9 +232,7 @@ internal class SceneRepacking : BaseStartupTask
         if (!_didRepack
             && JsonExtensions.TryLoadFromFile(catalogMetadataPath, out SceneCatalogMetadata? oldMeta)
             && oldMeta.SilksongVersion == VersionData.SilksongVersion
-            && Version.TryParse(oldMeta.PluginVersion, out Version oldVersion)
-            && oldVersion <= Version.Parse(AssetHelperPlugin.Version)
-            && oldVersion >= _lastAcceptablePluginVersion
+            && VersionData.EarliestAcceptableSceneRepackVersion.AllowCachedData(oldMeta.PluginVersion)
             )
         {
             // We can skip only if there's no change in the repacked bundles and no change to the version metadata
