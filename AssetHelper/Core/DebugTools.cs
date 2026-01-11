@@ -1,4 +1,5 @@
-﻿using AssetHelperLib.BundleTools;
+﻿using AssetsTools.NET.Extra;
+using AssetHelperLib.BundleTools;
 using BepInEx.Logging;
 using Silksong.AssetHelper.Internal;
 using System;
@@ -8,11 +9,11 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
+using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
-using AssetsTools.NET.Extra;
-using UnityEngine.AddressableAssets.ResourceLocators;
+using Logger = BepInEx.Logging.Logger;
 using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
 
 namespace Silksong.AssetHelper.Core;

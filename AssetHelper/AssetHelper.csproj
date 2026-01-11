@@ -79,6 +79,11 @@
     <None Include="../thunderstore/icon.png" Pack="True" PackagePath="icon.png" />
   </ItemGroup>
 
+  <!--Global usings should be used sparingly, and only for aliases-->
+  <ItemGroup>
+    <Using Include="UnityEngine.Object" Alias="UObject" />
+  </ItemGroup>
+  
   <Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
     <ItemGroup>
       <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="/" />
