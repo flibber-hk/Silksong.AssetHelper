@@ -1,6 +1,7 @@
 ﻿using Silksong.AssetHelper.Plugin;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -10,16 +11,10 @@ namespace Silksong.AssetHelper.ManagedAssets;
 /// <summary>
 /// Class representing a collection of Addressable assets of the same type that are
 /// loaded together.
-/// 
-/// This is more efficient than loading them separately.
-/// 
-/// It is important to check the OperationException of the <see cref="Handle"/> on this object
-/// because indexing might fail if one or more of the assets failed to load. 
 /// </summary>
 public class AddressableAssetGroup<T>
 {
-    private List<string> _keys;
-    private Dictionary<string, int> _indexLookup;
+    private Dictionary<string, string> _keyLookup;
 
     /// <summary>
     /// Construct an Addressable asset group from a mapping {name -> key}.
@@ -30,15 +25,7 @@ public class AddressableAssetGroup<T>
     /// The key should be an Addressables key.</param>
     public AddressableAssetGroup(Dictionary<string, string> keyLookup)
     {
-        _indexLookup = [];
-        _keys = [];
-        int count = 0;
-        foreach ((string name, string key) in keyLookup)
-        {
-            _indexLookup[name] = count;
-            _keys.Add(key);
-            count++;
-        }
+        _keyLookup = keyLookup;
     }
 
     /// <summary>
@@ -85,68 +72,90 @@ public class AddressableAssetGroup<T>
         return new(keyLookup);
     }
 
-    private AsyncOperationHandle<IList<T>>? _handle;
+    private Dictionary<string, AsyncOperationHandle<T>>? _handles;
 
     /// <summary>
-    /// The operation handle containing the asset. This will be null if the asset has not been loaded.
+    /// Get a <see cref="CustomYieldInstruction"/> that can be used to wait for the assets to finish loading.
     /// 
-    /// This handle should not be unloaded manually; instead, the <see cref="Unload"/> method
-    /// on this instance should be used.
+    /// Calling `yield return group.GetYieldInstruction()` in an IEnumerator will cause Unity to pause the coroutine
+    /// until all assets are loaded.
     /// </summary>
-    /// <exception cref="InvalidOperationException">Exception thrown if this instance has not been loaded when accessing the handle.</exception>
-    public AsyncOperationHandle<IList<T>> Handle => _handle.HasValue
-        ? _handle.Value
-        : throw new InvalidOperationException($"Addressable asset group must be loaded before accessing the handle!");
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException">If this function is called before loading the assets.</exception>
+    public CustomYieldInstruction GetYieldInstruction()
+    {
+        if (_handles == null)
+        {
+            throw new InvalidOperationException($"This {nameof(AddressableAssetGroup<>)} must be loaded before awaiting!");
+        }
 
+        return new WaitUntil(() => this.IsLoaded);
+    }
 
     /// <summary>
     /// Load the underlying asset. This operation is idempotent.
     /// 
     /// This should be called prior to using the asset.
     /// </summary>
-    /// <returns>The handle used to load the asset.</returns>
-    public AsyncOperationHandle<IList<T>> Load()
+    /// <returns>The output of <see cref="GetYieldInstruction"/>.</returns>
+    public CustomYieldInstruction Load()
     {
-        if (_handle == null)
+        if (_handles != null)
         {
-            _handle = Addressables.LoadAssetsAsync<T>(_keys, null, Addressables.MergeMode.Union);
+            return GetYieldInstruction();
         }
-        return Handle;
+
+        _handles = [];
+        foreach ((string name, string key) in _keyLookup)
+        {
+            _handles[name] = Addressables.LoadAssetAsync<T>(key);
+        }
+
+        return GetYieldInstruction();
     }
 
     /// <summary>
     /// Access a loaded asset by name.
     /// </summary>
     /// <param name="name">The name as provided when creating this instance.</param>
-    public T this[string name]
+    public AsyncOperationHandle<T> this[string name]
     {
         get
         {
-            return Handle.Result[_indexLookup[name]];
+            if (_handles == null)
+            {
+                throw new InvalidOperationException("Handles can not be accessed until this instance has started loading");
+            }
+
+            return _handles![name];
         }
     }
 
     /// <summary>
-    /// Unload the underlying asset. This operation is idempotent.
+    /// Unload the underlying assets. This operation is idempotent.
     /// 
     /// This should not be called if the asset is still in use.
     /// </summary>
     public void Unload()
     {
-        if (_handle.HasValue)
+        if (_handles != null)
         {
-            Addressables.Release(_handle.Value);
-            _handle = null;
+            foreach (var handle in _handles.Values)
+            {
+                Addressables.Release(handle);
+            }
+            
+            _handles = null;
         }
     }
 
     /// <summary>
-    /// Whether or not the asset has finished loading.
+    /// Whether or not the assets have finished loading.
     /// </summary>
-    public bool IsLoaded => HasBeenLoaded && Handle.IsDone;
+    public bool IsLoaded => HasBeenLoaded && _handles!.Values.All(x => x.IsDone);
 
     /// <summary>
     /// Whether or not the asset load request has been made.
     /// </summary>
-    public bool HasBeenLoaded => _handle.HasValue;
+    public bool HasBeenLoaded => _handles != null;
 }
