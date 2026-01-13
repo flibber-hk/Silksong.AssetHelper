@@ -26,8 +26,9 @@
     <PackageId>Silksong.AssetHelper</PackageId>
     <RepositoryUrl>https://github.com/flibber-hk/Silksong.AssetHelper</RepositoryUrl>
     <Description>Library for helping with loading vanilla Silksong assets.</Description>
+    <NeutralLanguage>EN</NeutralLanguage>
   </PropertyGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="BepInEx.Analyzers" Version="1.0.8" PrivateAssets="all" />
     <PackageReference Include="BepInEx.Core" Version="5.4.21" />
@@ -39,6 +40,14 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="UnityEngine.Modules" Version="6000.0.50" IncludeAssets="compile" />
+    <PackageReference Include="DataDrivenConstants" Version="1.1.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <AdditionalFiles Include="languages/en.json"/>
   </ItemGroup>
 
   <!--
@@ -86,13 +95,14 @@
   
   <Target Name="CopyAndPackageMod" AfterTargets="PostBuildEvent">
     <ItemGroup>
-      <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="/" />
-      <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="/" />
-      <Binaries Include="$(TargetDir)/$(TargetName).xml" LocalDir="/" PackDir="/" />
-      <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.dll" />
-      <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.xml" />
-      <Binaries Include="$(PkgAssetHelperLib)/lib/netstandard2.1/AssetHelperLib.dll" />
-      <Binaries Include="$(PkgAssetHelperLib)/lib/netstandard2.1/AssetHelperLib.xml" />
+      <Binaries Include="$(TargetPath)" LocalDir="/" PackDir="plugins" />
+      <Binaries Include="$(TargetDir)/$(TargetName).pdb" LocalDir="/" PackDir="plugins" />
+      <Binaries Include="$(TargetDir)/$(TargetName).xml" LocalDir="/" PackDir="plugins" />
+      <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.dll" PackDir="plugins" />
+      <Binaries Include="$(PkgAssetsTools_NET)/lib/netstandard2.0/AssetsTools.NET.xml" PackDir="plugins" />
+      <Binaries Include="$(PkgAssetHelperLib)/lib/netstandard2.1/AssetHelperLib.dll" PackDir="plugins" />
+      <Binaries Include="$(PkgAssetHelperLib)/lib/netstandard2.1/AssetHelperLib.xml" PackDir="plugins" />
+      <Binaries Include="languages/*.json" LocalDir="languages" PackDir="plugins/languages" />
     </ItemGroup>
     <PropertyGroup>
       <ThunderstoreDir>$(ProjectDir)/../thunderstore</ThunderstoreDir>

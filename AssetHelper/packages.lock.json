@@ -30,6 +30,12 @@
           "HarmonyX": "2.7.0"
         }
       },
+      "DataDrivenConstants": {
+        "type": "Direct",
+        "requested": "[1.1.0, )",
+        "resolved": "1.1.0",
+        "contentHash": "HwaWo9+GHQjS8DQnV9L+sPyXfgpkBItQCRbOZ4jaDmYxsJnF2JJWS+wCFFMx5tKDupaaxK8y4m0CkwWRPX3tHA=="
+      },
       "Hamunii.BepInEx.AutoPlugin": {
         "type": "Direct",
         "requested": "[2.1.0, )",
