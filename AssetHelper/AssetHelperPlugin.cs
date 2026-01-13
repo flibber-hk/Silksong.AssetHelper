@@ -40,7 +40,7 @@ public partial class AssetHelperPlugin : BaseUnityPlugin
         InitLibLogging();
         AssetsToolsPatch.Init();
         BundleMetadata.Setup();
-        AssetRepackManager.Hook();
+        StartupOverrideManager.Hook();
         Addressables.ResourceManager.ResourceProviders.Add(new ChildGameObjectProvider());
 
         Logger.LogInfo($"Plugin {Name} ({Id}) has loaded!");

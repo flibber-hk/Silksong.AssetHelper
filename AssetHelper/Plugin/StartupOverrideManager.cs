@@ -12,7 +12,7 @@ namespace Silksong.AssetHelper.Plugin;
 /// Class managing the scene repacking.
 /// </summary>
 [MonoDetourTargets(typeof(StartManager))]
-internal static class AssetRepackManager
+internal static class StartupOverrideManager
 {
     internal static void Hook()
     {
