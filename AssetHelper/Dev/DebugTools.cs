@@ -1,12 +1,13 @@
-﻿using AssetsTools.NET.Extra;
-using AssetHelperLib.BundleTools;
-using BepInEx.Logging;
-using Silksong.AssetHelper.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using AssetHelperLib.BundleTools;
+using AssetsTools.NET.Extra;
+using BepInEx.Logging;
+using Silksong.AssetHelper.Core;
+using Silksong.AssetHelper.Internal;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
@@ -14,25 +15,29 @@ using UnityEngine.ResourceManagement.AsyncOperations;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
 using Logger = BepInEx.Logging.Logger;
-using NameListLookup = System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>;
-using Silksong.AssetHelper.Core;
+using NameListLookup = System.Collections.Generic.Dictionary<
+    string,
+    System.Collections.Generic.List<string>
+>;
 
 namespace Silksong.AssetHelper.Dev;
 
 /// <summary>
 /// Class providing tools to help find information about the asset database.
-/// 
+///
 /// The methods on this class should not be used in production code, and may be changed at any time.
 /// </summary>
 public static class DebugTools
 {
-    private static readonly ManualLogSource Log = Logger.CreateLogSource($"AssetHelper.{nameof(DebugTools)}");
+    private static readonly ManualLogSource Log = Logger.CreateLogSource(
+        $"AssetHelper.{nameof(DebugTools)}"
+    );
 
     private static string _debugDataDir = Path.Combine(AssetPaths.AssemblyFolder, "DebugData");
 
     /// <summary>
     /// The directory where functions in <see cref="Dev.DebugTools"/> write their output.
-    /// 
+    ///
     /// This is a subfolder of this plugin's assembly.
     /// </summary>
     public static string DebugDataDir
@@ -54,12 +59,14 @@ public static class DebugTools
     {
         string dumpFile = Path.Combine(DebugDataDir, "bundle_keys.json");
 
-        AddressablesData.InvokeAfterAddressablesLoaded(() => AddressablesData.BundleKeys.SerializeToFileInBackground(dumpFile));
+        AddressablesData.InvokeAfterAddressablesLoaded(() =>
+            AddressablesData.BundleKeys.SerializeToFileInBackground(dumpFile)
+        );
     }
 
     /// <summary>
     /// Dump all asset names to the asset_names.json file in the debug data dir.
-    /// 
+    ///
     /// This function loads all asset bundles, so is quite slow.
     /// </summary>
     public static void DumpAllAssetNames()
@@ -73,11 +80,12 @@ public static class DebugTools
 
         NameListLookup assetNames = [];
         NameListLookup sceneNames = [];
-        
+
         Stopwatch sw = Stopwatch.StartNew();
         foreach ((string name, string key) in AddressablesData.BundleKeys!)
         {
-            AsyncOperationHandle<IAssetBundleResource> op = Addressables.LoadAssetAsync<IAssetBundleResource>(key);
+            AsyncOperationHandle<IAssetBundleResource> op =
+                Addressables.LoadAssetAsync<IAssetBundleResource>(key);
             IAssetBundleResource rsc = op.WaitForCompletion();
             AssetBundle b = rsc.GetAssetBundle();
 
@@ -107,9 +115,9 @@ public static class DebugTools
 
     /// <summary>
     /// Write a list of all Addressable assets loadable using <see cref="Addressables.LoadAssetAsync{TObject}(object)"/> directly.
-    /// 
+    ///
     /// This only includes base game addressable assets; assets from catalogs added by AssetHelper are not included.
-    /// 
+    ///
     /// The list includes the most important information about each asset.
     /// </summary>
     public static void DumpAllAddressableAssets()
@@ -133,7 +141,11 @@ public static class DebugTools
     /// <param name="includeDependencyNames">Whether to include the names of dependencies.
     /// The dependency names will be in the form `[primaryKey | internalId]`.
     /// This will significantly increase the size of the outputted file.</param>
-    public static void DumpAllAddressableAssets(IResourceLocator locator, string fileName, bool includeDependencyNames = false)
+    public static void DumpAllAddressableAssets(
+        IResourceLocator locator,
+        string fileName,
+        bool includeDependencyNames = false
+    )
     {
         List<AddressablesAssetInfo> assetInfos = [];
 
@@ -162,10 +174,14 @@ public static class DebugTools
         public string? PrimaryKey { get; init; }
         public Type? ResourceType { get; init; }
 
-        public static AddressablesAssetInfo FromLocation(IResourceLocation loc, bool includeDependencyNames)
+        public static AddressablesAssetInfo FromLocation(
+            IResourceLocation loc,
+            bool includeDependencyNames
+        )
         {
             List<string>? depNames = includeDependencyNames
-                ? loc.Dependencies?.Select(x => $"[{x?.PrimaryKey} | {x?.InternalId}]").ToList() ?? []
+                ? loc.Dependencies?.Select(x => $"[{x?.PrimaryKey} | {x?.InternalId}]").ToList()
+                    ?? []
                 : null;
 
             return new()
@@ -188,7 +204,8 @@ public static class DebugTools
 
         foreach ((string name, string key) in AddressablesData.BundleKeys!)
         {
-            AsyncOperationHandle<IAssetBundleResource> op = Addressables.LoadAssetAsync<IAssetBundleResource>(key);
+            AsyncOperationHandle<IAssetBundleResource> op =
+                Addressables.LoadAssetAsync<IAssetBundleResource>(key);
             op.WaitForCompletion();
             lookup[op.Result.GetAssetBundle().name] = name;
             Addressables.Release(op);
@@ -199,7 +216,7 @@ public static class DebugTools
 
     /// <summary>
     /// Get a readable list of loaded bundle names (paths relative to the bundle base dir).
-    /// 
+    ///
     /// The first time this is used in each Silksong version, it will generate a lookup of bundle name -> readable name,
     /// which can be quite slow.
     /// </summary>
@@ -208,10 +225,14 @@ public static class DebugTools
     {
         if (!AddressablesData.IsAddressablesLoaded)
         {
-            throw new InvalidOperationException($"{nameof(GetLoadedBundleNames)} cannot be called until Addressables is loaded!");
+            throw new InvalidOperationException(
+                $"{nameof(GetLoadedBundleNames)} cannot be called until Addressables is loaded!"
+            );
         }
 
-        _bundleNameLookup ??= CachedObject<Dictionary<string, string>>.CreateSynced("bundle_name_lookup.json", GenerateBundleNameLookup).Value;
+        _bundleNameLookup ??= CachedObject<Dictionary<string, string>>
+            .CreateSynced("bundle_name_lookup.json", GenerateBundleNameLookup)
+            .Value;
 
         List<string> names = [];
         List<string> unknown = [];
@@ -250,7 +271,6 @@ public static class DebugTools
         public List<string> Unknown = unknown;
     }
 
-
     /// <summary>
     /// Dump all game object paths to paths_{sceneName}.json in the debug data dir.
     /// If <paramref name="compressed"/> is true, the output file will be paths_{sceneName}_compressed.json.
@@ -270,7 +290,10 @@ public static class DebugTools
             return;
         }
 
-        AssetsFileInstance mainFileInst = mgr.LoadAssetsFileFromBundle(bunInst, sceneBundleInfo.mainAfileInstIndex);
+        AssetsFileInstance mainFileInst = mgr.LoadAssetsFileFromBundle(
+            bunInst,
+            sceneBundleInfo.mainAfileInstIndex
+        );
 
         GameObjectLookup lookup = GameObjectLookup.CreateFromFile(mgr, mainFileInst);
         List<GameObjectLookup.GameObjectInfo> infos = lookup.TraverseOrdered().ToList();
@@ -280,7 +303,9 @@ public static class DebugTools
             return;
         }
 
-        List<string> cInfos = infos.Select(x => $"{x.GameObjectName} [{x.GameObjectPathId}, {x.TransformPathId}]").ToList();
+        List<string> cInfos = infos
+            .Select(x => $"{x.GameObjectName} [{x.GameObjectPathId}, {x.TransformPathId}]")
+            .ToList();
         cInfos.SerializeToFile(outPath);
 
         mgr.UnloadAll();

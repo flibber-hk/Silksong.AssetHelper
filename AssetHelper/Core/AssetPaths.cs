@@ -1,5 +1,5 @@
-﻿using BepInEx;
-using System.IO;
+﻿using System.IO;
+using BepInEx;
 using UnityEngine;
 
 namespace Silksong.AssetHelper.Core;
@@ -28,7 +28,7 @@ public static class AssetPaths
                 RuntimePlatform.WindowsPlayer => "StandaloneWindows64",
                 RuntimePlatform.OSXPlayer => "StandaloneOSX",
                 RuntimePlatform.LinuxPlayer => "StandaloneLinux64",
-                _ => ""
+                _ => "",
             };
             return Path.Combine(rootFolder, "aa", osFolder);
         }
@@ -37,7 +37,12 @@ public static class AssetPaths
     /// <summary>
     /// Get the path to the base game scene bundle for a given scene.
     /// </summary>
-    public static string GetScenePath(string sceneName) => Path.Combine(BundleFolder, "scenes_scenes_scenes", $"{sceneName.ToLowerInvariant()}.bundle");
+    public static string GetScenePath(string sceneName) =>
+        Path.Combine(
+            BundleFolder,
+            "scenes_scenes_scenes",
+            $"{sceneName.ToLowerInvariant()}.bundle"
+        );
 
     private static string CacheSubfolder
     {
@@ -56,20 +61,24 @@ public static class AssetPaths
     /// <summary>
     /// Directory storing cached information and data for this version of Silksong.
     /// </summary>
-    internal static string CacheDirectory => Path.Combine(Paths.CachePath, CacheSubfolder).CreateIfNeeded();
+    internal static string CacheDirectory =>
+        Path.Combine(Paths.CachePath, CacheSubfolder).CreateIfNeeded();
 
     /// <summary>
     /// Directory storing repacked scenes.
     /// </summary>
-    internal static string RepackedSceneBundleDir => Path.Combine(CacheDirectory, "repacked_scenes").CreateIfNeeded();
+    internal static string RepackedSceneBundleDir =>
+        Path.Combine(CacheDirectory, "repacked_scenes").CreateIfNeeded();
 
     /// <summary>
     /// Path to the AssetHelper catalog folder.
     /// </summary>
-    internal static string CatalogFolder => Path.Combine(CacheDirectory, "Catalogs").CreateIfNeeded();
+    internal static string CatalogFolder =>
+        Path.Combine(CacheDirectory, "Catalogs").CreateIfNeeded();
 
     /// <summary>
     /// Directory containing this assembly.
     /// </summary>
-    internal static string AssemblyFolder => Directory.GetParent(typeof(AssetPaths).Assembly.Location).FullName;
+    internal static string AssemblyFolder =>
+        Directory.GetParent(typeof(AssetPaths).Assembly.Location).FullName;
 }

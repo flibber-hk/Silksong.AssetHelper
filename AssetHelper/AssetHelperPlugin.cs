@@ -1,11 +1,11 @@
+using System;
+using System.Collections;
 using BepInEx;
 using BepInEx.Logging;
 using Silksong.AssetHelper.CatalogTools;
 using Silksong.AssetHelper.Core;
 using Silksong.AssetHelper.Internal;
 using Silksong.AssetHelper.Plugin;
-using System;
-using System.Collections;
 using UnityEngine.AddressableAssets;
 
 namespace Silksong.AssetHelper;
@@ -13,7 +13,8 @@ namespace Silksong.AssetHelper;
 // We don't want to create a menu because any config options we add in the future are either
 // intended for devs or shouldn't be toggled while in game.
 // Adding this for forward compatibility
-[AttributeUsage(AttributeTargets.Class)] internal class ModMenuIgnoreAttribute : Attribute { }
+[AttributeUsage(AttributeTargets.Class)]
+internal class ModMenuIgnoreAttribute : Attribute { }
 
 [BepInAutoPlugin(id: "io.github.flibber-hk.assethelper")]
 [BepInDependency("org.silksong-modding.i18n")]

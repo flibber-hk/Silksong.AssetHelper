@@ -1,5 +1,5 @@
-﻿using Silksong.AssetHelper.Plugin;
-using System;
+﻿using System;
+using Silksong.AssetHelper.Plugin;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -8,7 +8,7 @@ namespace Silksong.AssetHelper.ManagedAssets;
 
 /// <summary>
 /// Class which is a wrapper around an Addressables key, which can be freely loaded and unloaded.
-/// 
+///
 /// This class can be instantiated at any time, but cannot be loaded until after the catalogs have been built.
 /// If loading before reaching the main menu, it should be done in a callback to <see cref="AssetRequestAPI.InvokeAfterBundleCreation"/>.
 /// </summary>
@@ -25,18 +25,21 @@ public class AddressableAsset<T>(string key) : IManagedAsset
 
     /// <summary>
     /// The operation handle containing the asset. This will be null if the asset has not been loaded.
-    /// 
+    ///
     /// This handle should not be unloaded manually; instead, the <see cref="Unload"/> method
     /// on this instance should be used.
     /// </summary>
     /// <exception cref="InvalidOperationException">Exception thrown if this instance has not been loaded when accessing the handle.</exception>
-    public AsyncOperationHandle<T> Handle => _handle.HasValue
-        ? _handle.Value
-        : throw new InvalidOperationException($"Addressable asset with key {Key} must be loaded before accessing the handle!");
+    public AsyncOperationHandle<T> Handle =>
+        _handle.HasValue
+            ? _handle.Value
+            : throw new InvalidOperationException(
+                $"Addressable asset with key {Key} must be loaded before accessing the handle!"
+            );
 
     /// <summary>
     /// Construct an instance for the given scene asset.
-    /// 
+    ///
     /// Doing this during your plugin's Awake method will cause it to be requested automatically.
     /// via the <see cref="AssetRequestAPI"/> API.
     /// </summary>
@@ -47,7 +50,9 @@ public class AddressableAsset<T>(string key) : IManagedAsset
     {
         if (typeof(T) != typeof(GameObject))
         {
-            AssetHelperPlugin.InstanceLogger.LogWarning($"{nameof(AddressableAsset<>)} instances for scene assets should have GameObject as the type argument!");
+            AssetHelperPlugin.InstanceLogger.LogWarning(
+                $"{nameof(AddressableAsset<>)} instances for scene assets should have GameObject as the type argument!"
+            );
         }
 
         if (AssetRequestAPI.RequestApiAvailable)
@@ -61,7 +66,7 @@ public class AddressableAsset<T>(string key) : IManagedAsset
 
     /// <summary>
     /// Construct an instance for the given non-scene asset.
-    ///     
+    ///
     /// Doing this during your plugin's Awake method will cause it to be requested automatically.
     /// via the <see cref="AssetRequestAPI"/> API, provided the
     /// <paramref name="bundleName"/> argument is supplied.
@@ -80,10 +85,9 @@ public class AddressableAsset<T>(string key) : IManagedAsset
         return new(key);
     }
 
-
     /// <summary>
     /// Load the underlying asset. This operation is idempotent.
-    /// 
+    ///
     /// This should be called prior to using the asset.
     /// </summary>
     /// <returns>The handle used to load the asset.</returns>
@@ -100,7 +104,7 @@ public class AddressableAsset<T>(string key) : IManagedAsset
 
     /// <summary>
     /// Unload the underlying asset. This operation is idempotent.
-    /// 
+    ///
     /// This should not be called if the asset is still in use.
     /// </summary>
     public void Unload()

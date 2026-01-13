@@ -11,10 +11,9 @@ namespace Silksong.AssetHelper.CatalogTools;
 
 internal static class CatalogEntryUtils
 {
-
     /// <summary>
     /// Creates a catalog entry for repacked scene bundles.
-    /// 
+    ///
     /// </summary>
     /// <param name="primaryKey">The primary key of the bundle.</param>
     /// <param name="bundlePath">The fully qualified path to the bundle on the filesystem</param>
@@ -26,9 +25,8 @@ internal static class CatalogEntryUtils
         string bundlePath,
         string internalBundleName,
         List<string> dependencyKeys
-        )
+    )
     {
-
         AssetBundleRequestOptions requestOptions = new AssetBundleRequestOptions();
         requestOptions.AssetLoadMode = AssetLoadMode.RequestedAssetAndDependencies;
         requestOptions.BundleName = internalBundleName;
@@ -79,7 +77,7 @@ internal static class CatalogEntryUtils
         Type assetType,
         List<string> dependencyKeys,
         string primaryKey
-        )
+    )
     {
         object[] deps = dependencyKeys.Cast<object>().ToArray();
 
@@ -90,7 +88,7 @@ internal static class CatalogEntryUtils
             new object[] { primaryKey },
             deps,
             null
-            );
+        );
     }
 
     /// <summary>
@@ -101,12 +99,11 @@ internal static class CatalogEntryUtils
     /// <param name="relativePath">The path of the child relative to the parent, with no leading slash.</param>
     /// <param name="primaryKey">The primary key of the added entry.</param>
     public static ContentCatalogDataEntry CreateChildGameObjectEntry(
-    string parentPrimaryKey,
+        string parentPrimaryKey,
         string relativePath,
         out string primaryKey
-        )
+    )
     {
-        
         int lastDot = parentPrimaryKey.LastIndexOf('.');
         int lastSlash = parentPrimaryKey.LastIndexOf('/');
 
@@ -117,13 +114,11 @@ internal static class CatalogEntryUtils
             string suffix = parentPrimaryKey.Substring(lastDot);
             primaryKey = $"{mainId}/{relativePath}{suffix}";
         }
-
         // This would be weird but we should avoid double slash
         else if (parentPrimaryKey.EndsWith('/'))
         {
             primaryKey = $"{parentPrimaryKey}{relativePath}";
         }
-
         else
         {
             primaryKey = $"{parentPrimaryKey}/{relativePath}";
@@ -137,7 +132,7 @@ internal static class CatalogEntryUtils
         string parentPrimaryKey,
         string relativePath,
         string primaryKey
-        )
+    )
     {
         object[] deps = new object[] { parentPrimaryKey };
 
@@ -149,11 +144,14 @@ internal static class CatalogEntryUtils
             new object[] { primaryKey },
             deps,
             null
-            );
+        );
     }
 
     /// <inheritdoc cref="CreateEntryFromLocation(IResourceLocation, string)" />
-    public static ContentCatalogDataEntry CreateEntryFromLocation(IResourceLocation location, out string primaryKey)
+    public static ContentCatalogDataEntry CreateEntryFromLocation(
+        IResourceLocation location,
+        out string primaryKey
+    )
     {
         primaryKey = $"{nameof(AssetHelper)}:{location.PrimaryKey}";
 
@@ -166,7 +164,10 @@ internal static class CatalogEntryUtils
     /// <param name="location">The location.</param>
     /// <param name="primaryKey">The primary key for the new catalog entry.</param>
     /// <returns></returns>
-    public static ContentCatalogDataEntry CreateEntryFromLocation(IResourceLocation location, string primaryKey)
+    public static ContentCatalogDataEntry CreateEntryFromLocation(
+        IResourceLocation location,
+        string primaryKey
+    )
     {
         return new ContentCatalogDataEntry(
             location.ResourceType,

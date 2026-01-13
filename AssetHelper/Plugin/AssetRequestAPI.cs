@@ -1,7 +1,7 @@
-﻿using Silksong.AssetHelper.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Silksong.AssetHelper.Internal;
 using UnityEngine.AddressableAssets.ResourceLocators;
 
 namespace Silksong.AssetHelper.Plugin;
@@ -17,7 +17,9 @@ public static class AssetRequestAPI
     {
         if (!RequestApiAvailable)
         {
-            throw new InvalidOperationException($"Requests made through {caller} should be made during a plugin's Awake method!");
+            throw new InvalidOperationException(
+                $"Requests made through {caller} should be made during a plugin's Awake method!"
+            );
         }
     }
 
@@ -25,12 +27,13 @@ public static class AssetRequestAPI
 
     /// <summary>
     /// Invoke this action once AssetHelper has built the repacked scene bundles and loaded the new catalog.
-    /// 
+    ///
     /// If repacking has already been completed, the action will be invoked immediately.
-    /// 
+    ///
     /// This moment is typically too early to load any assets; this should mainly be used for debugging.
     /// </summary>
-    public static void InvokeAfterBundleCreation(Action a) => AfterBundleCreationComplete.Subscribe(a);
+    public static void InvokeAfterBundleCreation(Action a) =>
+        AfterBundleCreationComplete.Subscribe(a);
 
     #region Scene Assets
     internal static Dictionary<string, HashSet<string>> SceneAssetRequest { get; } = [];
@@ -42,7 +45,7 @@ public static class AssetRequestAPI
 
     /// <summary>
     /// Request the given asset paths in the given scene to be repacked.
-    /// 
+    ///
     /// This function must be called during a plugin's Awake method.
     /// </summary>
     /// <param name="sceneName">The name of the scene.</param>
@@ -53,23 +56,29 @@ public static class AssetRequestAPI
 
         sceneName = sceneName.ToLowerInvariant();
 
-        HashSet<string> updated = SceneAssetRequest.TryGetValue(sceneName, out HashSet<string> request) ? request : [];
+        HashSet<string> updated = SceneAssetRequest.TryGetValue(
+            sceneName,
+            out HashSet<string> request
+        )
+            ? request
+            : [];
         updated.UnionWith(assetPaths);
         SceneAssetRequest[sceneName] = updated;
     }
 
     /// <summary>
     /// Request that the given asset in the given scene be repacked.
-    /// 
+    ///
     /// This function must be called during a plugin's Awake method.
     /// </summary>
     /// <param name="sceneName">The name of the scene.</param>
     /// <param name="assetPath">An asset path to be repacked.</param>
-    public static void RequestSceneAsset(string sceneName, string assetPath) => RequestSceneAssets(sceneName, [assetPath]);
+    public static void RequestSceneAsset(string sceneName, string assetPath) =>
+        RequestSceneAssets(sceneName, [assetPath]);
 
     /// <summary>
     /// Request that the given assets in the given scenes be repacked.
-    /// 
+    ///
     /// This function must be called during a plugin's Awake method.
     /// </summary>
     /// <param name="assetData">A lookup (scene : list of paths) of game objects that should be repacked.</param>
@@ -88,7 +97,10 @@ public static class AssetRequestAPI
     /// </summary>
     public static IResourceLocator? NonSceneAssetLocator { get; internal set; }
 
-    internal static Dictionary<(string bundleName, string assetName), Type> RequestedNonSceneAssets { get; } = [];
+    internal static Dictionary<
+        (string bundleName, string assetName),
+        Type
+    > RequestedNonSceneAssets { get; } = [];
 
     /// <summary>
     /// Request that the given asset is made available via Addressables.
@@ -111,7 +123,9 @@ public static class AssetRequestAPI
         {
             if (t != typeof(T))
             {
-                AssetHelperPlugin.InstanceLogger.LogError($"Asset {bundleName} - {assetName} requested with both {t.Name} and {typeof(T).Name}");
+                AssetHelperPlugin.InstanceLogger.LogError(
+                    $"Asset {bundleName} - {assetName} requested with both {t.Name} and {typeof(T).Name}"
+                );
             }
         }
 
@@ -122,7 +136,8 @@ public static class AssetRequestAPI
     /// <summary>
     /// Request that the given assets of the same type within the same bundle are made available via Addressables.
     /// </summary>
-    public static void RequestNonSceneAssets<T>(string bundleName, IEnumerable<string> assetNames) where T: UObject
+    public static void RequestNonSceneAssets<T>(string bundleName, IEnumerable<string> assetNames)
+        where T : UObject
     {
         foreach (string assetName in assetNames)
         {
@@ -130,5 +145,4 @@ public static class AssetRequestAPI
         }
     }
     #endregion
-
 }

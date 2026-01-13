@@ -12,7 +12,7 @@ public static class CatalogKeys
 
     /// <summary>
     /// Get the primary key for a repacked scene asset.
-    /// 
+    ///
     /// No attempt is made to check that the scene asset is actually available in the catalog,
     /// but this function returns what the key would be if the asset had been repacked.
     /// </summary>
@@ -30,7 +30,7 @@ public static class CatalogKeys
 
     /// <summary>
     /// Get the primary key for a non-scene bundle asset.
-    /// 
+    ///
     /// No attempt is made to check that the asset is actually available in the catalog,
     /// or even if the asset exists, but this function returns what the key would be.
     /// </summary>

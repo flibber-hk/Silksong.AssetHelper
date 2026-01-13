@@ -1,12 +1,12 @@
-﻿using BepInEx.Logging;
-using Silksong.AssetHelper.Internal;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
+using BepInEx.Logging;
+using Silksong.AssetHelper.Internal;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
@@ -19,7 +19,9 @@ namespace Silksong.AssetHelper.Core;
 /// </summary>
 public static class AddressablesData
 {
-    private static readonly ManualLogSource Log = Logger.CreateLogSource($"{nameof(AssetHelper)}.{nameof(AddressablesData)}");
+    private static readonly ManualLogSource Log = Logger.CreateLogSource(
+        $"{nameof(AssetHelper)}.{nameof(AddressablesData)}"
+    );
 
     /// <summary>
     /// Lookup (lowercase bundle path relative to root bundles folder, with no .bundle suffix) -> (bundle primary key)
@@ -33,16 +35,19 @@ public static class AddressablesData
 
     /// <summary>
     /// Mapping from bundle file name to the key Addressables uses to load it.
-    /// 
+    ///
     /// This may change when the game updates but does not otherwise.
     /// </summary>
-    public static IReadOnlyDictionary<string, string>? BundleKeys => _bundleKeys == null ? null : new ReadOnlyDictionary<string, string>(_bundleKeys);
-
+    public static IReadOnlyDictionary<string, string>? BundleKeys =>
+        _bundleKeys == null ? null : new ReadOnlyDictionary<string, string>(_bundleKeys);
 
     /// <summary>
     /// Get the <see cref="IResourceLocation"/> for a given bundle name.
     /// </summary>
-    public static bool TryGetLocation(string bundleName, [NotNullWhen(true)] out IResourceLocation? location)
+    public static bool TryGetLocation(
+        string bundleName,
+        [NotNullWhen(true)] out IResourceLocation? location
+    )
     {
         string key = ToBundleKey(bundleName);
         IList<IResourceLocation> locations = Array.Empty<IResourceLocation>();
@@ -59,10 +64,11 @@ public static class AddressablesData
     /// <summary>
     /// Get the <see cref="IResourceLocation"/> for a given scene name.
     /// </summary>
-    public static bool TryGetLocationForScene(string sceneName, [NotNullWhen(true)] out IResourceLocation? location)
-        => TryGetLocation($"scenes_scenes_scenes/{sceneName.ToLowerInvariant()}", out location);
+    public static bool TryGetLocationForScene(
+        string sceneName,
+        [NotNullWhen(true)] out IResourceLocation? location
+    ) => TryGetLocation($"scenes_scenes_scenes/{sceneName.ToLowerInvariant()}", out location);
 
-            
     /// <summary>
     /// This is <see langword="true"/> if Addressables has loaded the catalog, <see langword="false"/> otherwise.
     /// </summary>
@@ -72,14 +78,14 @@ public static class AddressablesData
 
     /// <summary>
     /// Invoke this action once Addressables has loaded the catalog.
-    /// 
+    ///
     /// If Addressables has already loaded the catalog, the action will be invoked immediately.
-    /// 
+    ///
     /// This is a safe way to execute code that depends on Addressables.
     /// </summary>
-    public static void InvokeAfterAddressablesLoaded(Action a) => _afterAddressablesLoaded.Subscribe(a);
+    public static void InvokeAfterAddressablesLoaded(Action a) =>
+        _afterAddressablesLoaded.Subscribe(a);
 
-    
     private static readonly string BundleSuffix = @"_[0-9a-fA-F]{32}\.bundle+$";
     private static readonly Regex BundleSuffixRegex = new(BundleSuffix, RegexOptions.Compiled);
 
@@ -113,7 +119,8 @@ public static class AddressablesData
 
         foreach (string key in MainLocator.Keys.OfType<string>())
         {
-            if (!TryStrip(key, out string? stripped)) continue;
+            if (!TryStrip(key, out string? stripped))
+                continue;
 
             bundleKeys[stripped] = key;
         }

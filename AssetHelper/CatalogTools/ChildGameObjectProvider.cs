@@ -9,7 +9,7 @@ namespace Silksong.AssetHelper.CatalogTools;
 
 /// <summary>
 /// Resource provider that returns a child gameobject of its first dependency.
-/// 
+///
 /// The internal ID must be of the following form:
 /// {relativePath}/{InternalIdSeparator}/{whatever}
 /// relativePath is the path of the child relative to the parent, so it can be found
@@ -46,12 +46,20 @@ internal class ChildGameObjectProvider : ResourceProviderBase
             }
             else
             {
-                provideHandle.Complete<GameObject>(null!, false, new Exception($"Child '{relativePath}' not found in {parent.name}"));
+                provideHandle.Complete<GameObject>(
+                    null!,
+                    false,
+                    new Exception($"Child '{relativePath}' not found in {parent.name}")
+                );
             }
         }
         else
         {
-            provideHandle.Complete<GameObject>(null!, false, new Exception("Parent dependency failed to load or is not a GameObject."));
+            provideHandle.Complete<GameObject>(
+                null!,
+                false,
+                new Exception("Parent dependency failed to load or is not a GameObject.")
+            );
         }
     }
 }

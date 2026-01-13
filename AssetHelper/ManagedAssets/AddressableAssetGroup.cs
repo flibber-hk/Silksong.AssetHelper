@@ -1,7 +1,7 @@
-﻿using Silksong.AssetHelper.Plugin;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Silksong.AssetHelper.Plugin;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.ResourceManagement.AsyncOperations;
@@ -51,11 +51,14 @@ public class AddressableAssetGroup<T> : IManagedAsset
     /// <exception cref="InvalidOperationException">Exception thrown if the request is made after plugins have finished Awake-ing.</exception>
     public static AddressableAssetGroup<T> RequestAndCreate(
         Dictionary<string, SceneAssetInfo>? sceneAssets = null,
-        Dictionary<string, NonSceneAssetInfo>? nonSceneAssets = null)
+        Dictionary<string, NonSceneAssetInfo>? nonSceneAssets = null
+    )
     {
         if (!AssetRequestAPI.RequestApiAvailable)
         {
-            throw new InvalidOperationException("Asset requests should be made during or before a plugin's Awake method!");
+            throw new InvalidOperationException(
+                "Asset requests should be made during or before a plugin's Awake method!"
+            );
         }
 
         Dictionary<string, string> keyLookup = [];
@@ -64,13 +67,18 @@ public class AddressableAssetGroup<T> : IManagedAsset
         {
             if (typeof(T) != typeof(GameObject))
             {
-                AssetHelperPlugin.InstanceLogger.LogWarning($"{nameof(AddressableAssetGroup<>)} instances for scene assets should have GameObject as the type argument!");
+                AssetHelperPlugin.InstanceLogger.LogWarning(
+                    $"{nameof(AddressableAssetGroup<>)} instances for scene assets should have GameObject as the type argument!"
+                );
             }
 
             foreach ((string name, SceneAssetInfo asset) in sceneAssets)
             {
                 AssetRequestAPI.RequestSceneAsset(asset.SceneName, asset.ObjPath);
-                keyLookup.Add(name, CatalogKeys.GetKeyForSceneAsset(asset.SceneName, asset.ObjPath));
+                keyLookup.Add(
+                    name,
+                    CatalogKeys.GetKeyForSceneAsset(asset.SceneName, asset.ObjPath)
+                );
             }
         }
 
@@ -90,7 +98,7 @@ public class AddressableAssetGroup<T> : IManagedAsset
 
     /// <summary>
     /// Get a <see cref="CustomYieldInstruction"/> that can be used to wait for the assets to finish loading.
-    /// 
+    ///
     /// Calling `yield return group.GetYieldInstruction()` in an IEnumerator will cause Unity to pause the coroutine
     /// until all assets are loaded.
     /// </summary>
@@ -100,7 +108,9 @@ public class AddressableAssetGroup<T> : IManagedAsset
     {
         if (_handles == null)
         {
-            throw new InvalidOperationException($"This {nameof(AddressableAssetGroup<>)} must be loaded before awaiting!");
+            throw new InvalidOperationException(
+                $"This {nameof(AddressableAssetGroup<>)} must be loaded before awaiting!"
+            );
         }
 
         return new WaitUntil(() => this.IsLoaded);
@@ -108,7 +118,7 @@ public class AddressableAssetGroup<T> : IManagedAsset
 
     /// <summary>
     /// Load the underlying asset. This operation is idempotent.
-    /// 
+    ///
     /// This should be called prior to using the asset.
     /// </summary>
     /// <returns>The output of <see cref="GetYieldInstruction"/>.</returns>
@@ -140,7 +150,9 @@ public class AddressableAssetGroup<T> : IManagedAsset
         {
             if (_handles == null)
             {
-                throw new InvalidOperationException("Handles can not be accessed until this instance has started loading");
+                throw new InvalidOperationException(
+                    "Handles can not be accessed until this instance has started loading"
+                );
             }
 
             return _handles![name];
@@ -149,7 +161,7 @@ public class AddressableAssetGroup<T> : IManagedAsset
 
     /// <summary>
     /// Unload the underlying assets. This operation is idempotent.
-    /// 
+    ///
     /// This should not be called if the asset is still in use.
     /// </summary>
     public void Unload()
@@ -160,7 +172,7 @@ public class AddressableAssetGroup<T> : IManagedAsset
             {
                 Addressables.Release(handle);
             }
-            
+
             _handles = null;
         }
     }

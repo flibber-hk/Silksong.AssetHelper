@@ -10,7 +10,8 @@ public static class AddressableAssetExtensions
     /// <summary>
     /// Instantiate the asset managed by this instance.
     /// </summary>
-    public static T InstantiateAsset<T>(this AddressableAsset<T> asset) where T : UObject
+    public static T InstantiateAsset<T>(this AddressableAsset<T> asset)
+        where T : UObject
     {
         if (!asset.IsLoaded)
         {
@@ -23,7 +24,8 @@ public static class AddressableAssetExtensions
     /// <summary>
     /// Instantiate an asset in this group accessed by key.
     /// </summary>
-    public static T InstantiateAsset<T>(this AddressableAssetGroup<T> group, string key) where T : UObject
+    public static T InstantiateAsset<T>(this AddressableAssetGroup<T> group, string key)
+        where T : UObject
     {
         if (!group.IsLoaded)
         {

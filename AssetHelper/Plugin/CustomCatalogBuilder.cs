@@ -1,25 +1,25 @@
-﻿using Silksong.AssetHelper.CatalogTools;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using AssetHelperLib.BundleTools;
+using Silksong.AssetHelper.CatalogTools;
+using Silksong.AssetHelper.Core;
 using UnityEngine;
 using UnityEngine.AddressableAssets.ResourceLocators;
 using UnityEngine.ResourceManagement.ResourceLocations;
 using UnityEngine.ResourceManagement.ResourceProviders;
-using AssetHelperLib.BundleTools;
-using Silksong.AssetHelper.Core;
 
 namespace Silksong.AssetHelper.Plugin;
 
 /// <summary>
 /// Class to help in building a custom catalog with base game dependencies.
-/// 
+///
 /// This class should only be used after the base game catalog has loaded.
 /// </summary>
 internal class CustomCatalogBuilder
 {
     private readonly string _primaryKeyPrefix;
-    
+
     private readonly Dictionary<string, ContentCatalogDataEntry> _baseBundleEntries;
     private readonly HashSet<string> _includedBaseBundles = [];
     private readonly Dictionary<string, string> _basePrimaryKeys = [];
@@ -52,7 +52,10 @@ internal class CustomCatalogBuilder
             }
 
             string primaryKey = $"{_primaryKeyPrefix}/DependencyBundles/{bundleName}";
-            ContentCatalogDataEntry entry = CatalogEntryUtils.CreateEntryFromLocation(location, primaryKey);
+            ContentCatalogDataEntry entry = CatalogEntryUtils.CreateEntryFromLocation(
+                location,
+                primaryKey
+            );
 
             _baseBundleEntries.Add(bundleName, entry);
             _basePrimaryKeys.Add(bundleName, primaryKey);
@@ -65,15 +68,20 @@ internal class CustomCatalogBuilder
         string repackedSceneBundleKey = $"{_primaryKeyPrefix}/SceneBundles/{sceneName}";
 
         ContentCatalogDataEntry bundleEntry = CatalogEntryUtils.CreateBundleEntry(
-                repackedSceneBundleKey,
-                bundlePath,
-                data.BundleName!,
-                []);
+            repackedSceneBundleKey,
+            bundlePath,
+            data.BundleName!,
+            []
+        );
         _addedEntries.Add(bundleEntry);
 
         // Get dependency list
         List<string> dependencyKeys = [repackedSceneBundleKey];
-        foreach (string dep in BundleMetadata.DetermineDirectDeps($"scenes_scenes_scenes/{sceneName}.bundle"))
+        foreach (
+            string dep in BundleMetadata.DetermineDirectDeps(
+                $"scenes_scenes_scenes/{sceneName}.bundle"
+            )
+        )
         {
             string depKey = dep.Replace(".bundle", "");
             _includedBaseBundles.Add(depKey);
@@ -88,7 +96,7 @@ internal class CustomCatalogBuilder
                 typeof(GameObject),
                 dependencyKeys,
                 $"{_primaryKeyPrefix}/Assets/{sceneName}/{objPath}"
-                );
+            );
             _addedEntries.Add(entry);
         }
     }
@@ -108,7 +116,11 @@ internal class CustomCatalogBuilder
         foreach ((string asset, Type assetType) in data)
         {
             ContentCatalogDataEntry entry = CatalogEntryUtils.CreateAssetEntry(
-                asset, assetType, dependencyKeys, $"{_primaryKeyPrefix}/{asset}");
+                asset,
+                assetType,
+                dependencyKeys,
+                $"{_primaryKeyPrefix}/{asset}"
+            );
             _addedEntries.Add(entry);
         }
     }
@@ -119,7 +131,11 @@ internal class CustomCatalogBuilder
     {
         catalogId ??= _primaryKeyPrefix;
 
-        List<ContentCatalogDataEntry> allEntries = [.. _includedBaseBundles.Select(x => _baseBundleEntries[x]), .. _addedEntries];
+        List<ContentCatalogDataEntry> allEntries =
+        [
+            .. _includedBaseBundles.Select(x => _baseBundleEntries[x]),
+            .. _addedEntries,
+        ];
 
         string catalogPath = CatalogUtils.WriteCatalog(allEntries, catalogId);
 

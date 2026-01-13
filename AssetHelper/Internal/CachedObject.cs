@@ -1,22 +1,28 @@
-﻿using Newtonsoft.Json;
-using Silksong.AssetHelper.Core;
-using System;
+﻿using System;
 using System.IO;
+using Newtonsoft.Json;
+using Silksong.AssetHelper.Core;
 
 namespace Silksong.AssetHelper.Internal;
 
 /// <summary>
 /// Object that is loaded from cache if possible, and instantiated if not.
-/// 
+///
 /// The object is saved when quitting the application.
 /// </summary>
-internal class CachedObject<T> where T : class
+internal class CachedObject<T>
+    where T : class
 {
     private CachedObject() { }
-        
-    [JsonProperty] public required string SilksongVersion { get; init; }
-    [JsonProperty] public required string PluginVersion { get; init; }
-    [JsonProperty] public required T Value { get; set; }
+
+    [JsonProperty]
+    public required string SilksongVersion { get; init; }
+
+    [JsonProperty]
+    public required string PluginVersion { get; init; }
+
+    [JsonProperty]
+    public required T Value { get; set; }
 
     private bool IsValid()
     {
@@ -24,7 +30,7 @@ internal class CachedObject<T> where T : class
         {
             return false;
         }
-        
+
         if (VersionData.SilksongVersion != SilksongVersion)
         {
             return false;
@@ -43,7 +49,12 @@ internal class CachedObject<T> where T : class
         string filePath = Path.Combine(AssetPaths.CacheDirectory, filename);
 
         // Check if the object already exists
-        if (JsonExtensions.TryLoadFromFile<CachedObject<T>>(filePath, out CachedObject<T>? fromCache))
+        if (
+            JsonExtensions.TryLoadFromFile<CachedObject<T>>(
+                filePath,
+                out CachedObject<T>? fromCache
+            )
+        )
         {
             if (fromCache.Value is not null && fromCache.IsValid())
             {
@@ -56,7 +67,7 @@ internal class CachedObject<T> where T : class
         {
             SilksongVersion = VersionData.SilksongVersion,
             PluginVersion = AssetHelperPlugin.Version,
-            Value = createDefault()
+            Value = createDefault(),
         };
         AssetHelperPlugin.OnQuitApplication += () => created.SerializeToFile(filePath);
         return created;

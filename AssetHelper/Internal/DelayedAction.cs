@@ -8,7 +8,6 @@ namespace Silksong.AssetHelper.Internal;
 /// </summary>
 internal class DelayedAction
 {
-
     private List<Action> _subscribers = [];
 
     /// <summary>

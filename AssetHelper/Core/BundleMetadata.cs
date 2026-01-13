@@ -1,9 +1,9 @@
-﻿using AssetsTools.NET;
-using AssetsTools.NET.Extra;
-using Silksong.AssetHelper.Internal;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using AssetsTools.NET;
+using AssetsTools.NET.Extra;
+using Silksong.AssetHelper.Internal;
 
 namespace Silksong.AssetHelper.Core;
 
@@ -14,10 +14,15 @@ public static class BundleMetadata
 {
     internal static void Setup()
     {
-        CabLookup = CachedObject<IReadOnlyDictionary<string, string>>.CreateSynced("cabs.json", GenerateCabLookup).Value;
-        DirectDependencyLookup = CachedObject<Dictionary<string, List<string>>>.CreateSynced("direct_deps.json", () => []);
+        CabLookup = CachedObject<IReadOnlyDictionary<string, string>>
+            .CreateSynced("cabs.json", GenerateCabLookup)
+            .Value;
+        DirectDependencyLookup = CachedObject<Dictionary<string, List<string>>>.CreateSynced(
+            "direct_deps.json",
+            () => []
+        );
     }
-    
+
     /// <summary>
     /// Lookup for cab name to bundle path.
     /// </summary>
@@ -33,7 +38,13 @@ public static class BundleMetadata
 
         Dictionary<string, string> lookup = [];
 
-        foreach (string f in Directory.EnumerateFiles(bundleFolder, "*.bundle", SearchOption.AllDirectories))
+        foreach (
+            string f in Directory.EnumerateFiles(
+                bundleFolder,
+                "*.bundle",
+                SearchOption.AllDirectories
+            )
+        )
         {
             string key = Path.GetRelativePath(bundleFolder, f).Replace("\\", "/");
 
@@ -44,12 +55,16 @@ public static class BundleMetadata
         }
 
         sw.Stop();
-        AssetHelperPlugin.InstanceLogger.LogInfo($"Generated CAB lookup in {sw.ElapsedMilliseconds} ms");
+        AssetHelperPlugin.InstanceLogger.LogInfo(
+            $"Generated CAB lookup in {sw.ElapsedMilliseconds} ms"
+        );
 
         return lookup;
     }
 
-    private static CachedObject<Dictionary<string, List<string>>> DirectDependencyLookup { get; set; } = null!;
+    private static CachedObject<
+        Dictionary<string, List<string>>
+    > DirectDependencyLookup { get; set; } = null!;
 
     /// <summary>
     /// Determine the direct dependencies for a given bundle.

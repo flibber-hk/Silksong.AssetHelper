@@ -1,11 +1,11 @@
-﻿using Silksong.AssetHelper.Core;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Text;
+using Silksong.AssetHelper.Core;
 using UnityEngine;
 using UnityEngine.AddressableAssets;
 using UnityEngine.AddressableAssets.ResourceLocators;
@@ -14,14 +14,11 @@ using UnityEngine.ResourceManagement.Util;
 
 namespace Silksong.AssetHelper.CatalogTools;
 
-
 /// <summary>
 /// Class to write a catalog file that can be loaded by the Addressables package.
 /// </summary>
 internal static class CatalogUtils
 {
-
-
     /// <summary>
     /// Hashes the provided data using Unity's Hash128 implementation.
     /// Mainly used to create the catalog hash file.
@@ -43,7 +40,6 @@ internal static class CatalogUtils
         return outhash;
     }
 
-
     /// <summary>
     /// Serializes the provided entry list into a binary catalog.
     /// Writes the binary catalog and its hash next to each other.
@@ -51,7 +47,10 @@ internal static class CatalogUtils
     /// <param name="locationEntries">List of entries to serialize into the catalog</param>
     /// <param name="catalogId">Unique name of the catalog.</param>
     /// <returns>A path to the catalog bin.</returns>
-    public static string WriteCatalog(List<ContentCatalogDataEntry> locationEntries, string catalogId)
+    public static string WriteCatalog(
+        List<ContentCatalogDataEntry> locationEntries,
+        string catalogId
+    )
     {
         string catalogName = catalogId;
         if (!catalogName.StartsWith(nameof(AssetHelper)))
@@ -64,16 +63,22 @@ internal static class CatalogUtils
 
         ContentCatalogData.Serializer catalogSerializer = new();
         BinaryStorageBuffer catalogBuffer = new();
-        BinaryStorageBuffer.Writer catalogWriter = new BinaryStorageBuffer.Writer(1048576, catalogSerializer);
+        BinaryStorageBuffer.Writer catalogWriter = new BinaryStorageBuffer.Writer(
+            1048576,
+            catalogSerializer
+        );
 
         catalogSerializer.Serialize(catalogWriter, ccd);
         byte[] catalogBytes = catalogWriter.SerializeToByteArray();
-        
+
         Hash128 outhash = Hash(catalogBytes);
 
         string catalogBinPath = Path.Combine(AssetPaths.CatalogFolder, $"{catalogId}.bin");
         File.WriteAllBytes(catalogBinPath, catalogBytes);
-        File.WriteAllText(Path.Combine(AssetPaths.CatalogFolder, $"{catalogId}.hash"), outhash.ToString());
+        File.WriteAllText(
+            Path.Combine(AssetPaths.CatalogFolder, $"{catalogId}.hash"),
+            outhash.ToString()
+        );
 
         return catalogBinPath;
     }
