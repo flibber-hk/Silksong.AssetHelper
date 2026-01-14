@@ -14,6 +14,9 @@ namespace Silksong.AssetHelper.Plugin;
 [MonoDetourTargets(typeof(StartManager))]
 internal static class StartupOverrideManager
 {
+    // StartManager.Start should never 
+    private static bool _startupRun = false;
+
     internal static void Hook()
     {
         Md.StartManager.Start.Postfix(PrependStartManagerStart);
@@ -21,7 +24,10 @@ internal static class StartupOverrideManager
 
     private static void PrependStartManagerStart(StartManager self, ref IEnumerator returnValue)
     {
-        returnValue = WrapStartManagerStart(self, returnValue);
+        if (!_startupRun)
+        {
+            returnValue = WrapStartManagerStart(self, returnValue);
+        }
     }
 
     private static List<BaseStartupTask> _tasks = [new SceneRepacking(), new NonSceneCatalog()];
@@ -74,6 +80,7 @@ internal static class StartupOverrideManager
         {
             AssetHelperPlugin.InstanceLogger.LogInfo($"{nameof(AssetHelper)} prep complete!");
             AssetRequestAPI.AfterBundleCreationComplete.Activate();
+            _startupRun = true;
             bar.SetProgress(1);
         }
         else
