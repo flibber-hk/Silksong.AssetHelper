@@ -109,7 +109,10 @@ public static class AssetRequestAPI
     /// <param name="bundleName">The name of the bundle containing the asset.
     /// This is the path to the bundle, relative to the Standalone??? dir.</param>
     /// <param name="assetName">The name of the asset within the bundle container.</param>
-    public static void RequestNonSceneAsset<T>(string bundleName, string assetName)
+    public static void RequestNonSceneAsset<T>(string bundleName, string assetName) => RequestNonSceneAsset(bundleName, assetName, typeof(T));
+
+    /// <inheritdoc cref="RequestNonSceneAsset{T}(string, string)" />
+    public static void RequestNonSceneAsset(string bundleName, string assetName, Type assetType)
     {
         VerifyRequest();
 
@@ -121,16 +124,16 @@ public static class AssetRequestAPI
 
         if (RequestedNonSceneAssets.TryGetValue((bundleName, assetName), out Type t))
         {
-            if (t != typeof(T))
+            if (t != assetType)
             {
                 AssetHelperPlugin.InstanceLogger.LogError(
-                    $"Asset {bundleName} - {assetName} requested with both {t.Name} and {typeof(T).Name}"
+                    $"Asset {bundleName} - {assetName} requested with both {t.Name} and {assetType.Name}"
                 );
             }
         }
 
         // Always prefer the newer type, regardless of the error
-        RequestedNonSceneAssets[(bundleName, assetName)] = typeof(T);
+        RequestedNonSceneAssets[(bundleName, assetName)] = assetType;
     }
 
     /// <summary>
