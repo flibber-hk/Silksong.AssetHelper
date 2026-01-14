@@ -35,9 +35,9 @@ IEnumerator LoadAll()
 {
     // Start loading object1, and pause the coroutine until object1 is loaded
     yield return object1.Load();
-    // Start loading object2, and pause the coroutine until object1 is loaded
+    // Start loading object2, and pause the coroutine until object2 is loaded
     yield return object2.Load();
-    // Start loading object3, and pause the coroutine until object1 is loaded
+    // Start loading object3, and pause the coroutine until object3 is loaded
     yield return object3.Load();
 }
 
