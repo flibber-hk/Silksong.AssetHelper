@@ -30,7 +30,7 @@ internal static class StartupOverrideManager
         }
     }
 
-    private static List<BaseStartupTask> _tasks = [new SceneRepacking(), new NonSceneCatalog()];
+    private static List<BaseStartupTask> _tasks = [new BundleDepsTask(), new SceneRepacking(), new NonSceneCatalog()];
 
     private static IEnumerator WrapStartManagerStart(StartManager self, IEnumerator original)
     {

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using AssetsTools.NET;
 using AssetsTools.NET.Extra;
 using Silksong.AssetHelper.Internal;
@@ -108,5 +109,38 @@ public static class BundleMetadata
         DirectDependencyLookup.Value[bundleFile] = [.. computedDeps];
 
         return computedDeps;
+    }
+
+    /// <summary>
+    /// Determine all dependencies of the given bundle, direct and transitive,
+    /// </summary>
+    /// <param name="bundleName"></param>
+    /// <returns></returns>
+    public static List<string> DetermineTransitiveDeps(string bundleName)
+    {
+        string bundleFile = bundleName;
+        if (!bundleFile.EndsWith(".bundle"))
+        {
+            bundleFile = bundleFile + ".bundle";
+        }
+
+        HashSet<string> seen = [bundleFile];
+        Queue<string> toProcess = new();
+        toProcess.Enqueue(bundleFile);
+
+        while (toProcess.TryDequeue(out string current))
+        {
+            foreach (string dep in DetermineDirectDeps(current))
+            {
+                if (seen.Add(dep))
+                {
+                    toProcess.Enqueue(dep);
+                }
+            }
+        }
+
+        seen.Remove(bundleFile);
+
+        return seen.ToList();
     }
 }
