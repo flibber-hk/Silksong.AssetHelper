@@ -76,7 +76,7 @@
 
   <ItemGroup>
     <PackageReference Include="MonoDetour.HookGen" Version="0.7.*" PrivateAssets="all" />
-    <PackageReference Include="MonoDetour" Version="*" />
+    <PackageReference Include="MonoDetour" Version="0.7.10" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(CI)' == 'true'">
