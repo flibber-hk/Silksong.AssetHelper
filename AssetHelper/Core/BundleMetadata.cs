@@ -108,6 +108,7 @@ public static class BundleMetadata
 
         DirectDependencyLookup.Value[bundleFile] = [.. computedDeps];
 
+        mgr.UnloadAll();
         return computedDeps;
     }
 
