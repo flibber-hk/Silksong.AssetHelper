@@ -9,12 +9,13 @@ using System.Text;
 
 namespace Silksong.AssetHelper.Plugin.Tasks;
 
-internal class BundleDepsTask : BaseStartupTask
+internal class BundleDepsPrecompute : BaseStartupTask
 {
     public override IEnumerator Run(LoadingBar loadingBar)
     {
-        if (!AssetRequestAPI.AnyRequestMade)
+        if (AssetRequestAPI.RequestedNonSceneAssets.Count == 0)
         {
+            // Only need to precompute bundle deps if there're non-scene assets requested
             yield break;
         }
 
@@ -37,6 +38,7 @@ internal class BundleDepsTask : BaseStartupTask
             
             if (ct % 5 == 0)
             {
+                // Yield after batches because at this scale the fps is contributing more than 1/3 of the time
                 yield return null;
             }
         }

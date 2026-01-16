@@ -62,6 +62,34 @@ internal class CustomCatalogBuilder
         }
     }
 
+    private List<string> DetermineCatalogDeps(string sceneBundle)
+    {
+        sceneBundle = sceneBundle.Replace(".bundle", "");
+        string sceneName = sceneBundle.Substring("scenes_scenes_scenes/".Length);
+
+        string key = AddressablesData.MainLocator!.Keys.OfType<string>().Where(s =>
+            s.StartsWith("Scenes/")
+            && s.Substring(7).ToLowerInvariant() == sceneName
+        ).First();
+
+        AddressablesData.MainLocator.Locate(key, typeof(SceneInstance), out IList<IResourceLocation> locations);
+        IResourceLocation location = locations.First();
+
+        List<string> deps = [];
+        foreach (IResourceLocation depLoc in location.Dependencies)
+        {
+            string pkey = depLoc.PrimaryKey;
+            AddressablesData.TryStrip(pkey, out string? pkeyStripped);
+            if (pkeyStripped == sceneBundle)
+            {
+                continue;
+            }
+            deps.Add(pkeyStripped! + ".bundle");
+        }
+
+        return deps;
+    }
+
     public void AddRepackedSceneData(string sceneName, RepackedBundleData data, string bundlePath)
     {
         // Create an entry for the bundle
@@ -78,7 +106,7 @@ internal class CustomCatalogBuilder
         // Get dependency list
         List<string> dependencyKeys = [repackedSceneBundleKey];
         foreach (
-            string dep in BundleMetadata.DetermineTransitiveDeps(
+            string dep in DetermineCatalogDeps(
                 $"scenes_scenes_scenes/{sceneName}.bundle"
             )
         )
