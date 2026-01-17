@@ -84,7 +84,7 @@ public class FleaSignPlugin : BaseUnityPlugin
         }
 
         // Spawn the sign. We can apply any modifications to the copy before setting it active.
-        // This is the same as doing Instantiate(_fleaSign.Handle!.Value.Result);
+        // This is the same as doing Instantiate(_fleaSign.Handle.Result);
         GameObject spawnedSign = _fleaSign.InstantiateAsset();
 
         // It is good practice to change the name of the object we spawn to something
